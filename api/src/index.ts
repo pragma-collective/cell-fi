@@ -1,13 +1,10 @@
-import { Hono } from 'hono'
-import { db } from './db'
-import { examples } from './db/schema/example'
+import { Hono } from "hono";
+const app = new Hono();
 
-const app = new Hono()
+app.get("/", async (c) => {
+  return c.json({
+    message: "Hello World",
+  });
+});
 
-app.get('/', async (c) => {
-  // Example query to test the database connection
-  const result = await db.select().from(examples).limit(1)
-  return c.json(result)
-})
-
-export default app
+export default app;
