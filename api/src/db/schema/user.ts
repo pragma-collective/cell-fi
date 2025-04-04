@@ -8,6 +8,6 @@ export const user = pgTable("users", {
   firstName: varchar("first_name", { length: 255 }),
   lastName: varchar("last_name", { length: 255 }),
   phoneNumber: varchar("phone_number", { length: 255 }),
-  walletAddress: varchar("wallet_address", { length: 255 }),
+  walletAddress: varchar("wallet_address", { length: 255 }).notNull(),
   ...timestamps,
 });

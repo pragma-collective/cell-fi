@@ -12,7 +12,9 @@ export const transactionType = pgEnum("transaction_type", ["send", "receive"]);
 
 export const transaction = pgTable("transactions", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: uuid("user_id").references(() => user.id),
+  userId: uuid("user_id")
+    .references(() => user.id)
+    .notNull(),
   type: transactionType("type").notNull(),
   txHash: varchar("tx_hash", { length: 255 }).notNull(),
   status: transactionStatus("status").notNull(),

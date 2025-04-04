@@ -29,6 +29,13 @@
       "when": 1743784455324,
       "tag": "0003_violet_romulus",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1743784558647,
+      "tag": "0004_acoustic_mandroid",
+      "breakpoints": true
     }
   ]
 }
