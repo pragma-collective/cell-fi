@@ -15,6 +15,13 @@
       "when": 1743782044954,
       "tag": "0001_far_veda",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1743782549203,
+      "tag": "0002_outgoing_peter_parker",
+      "breakpoints": true
     }
   ]
 }
