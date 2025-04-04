@@ -153,3 +153,11 @@ export class SmsParserService {
     };
   }
 }
+
+/**
+ * Creates a new SMS parser service
+ * @returns A new SMS parser service instance
+ */
+export function createSmsParserService(): SmsParserService {
+  return new SmsParserService();
+}

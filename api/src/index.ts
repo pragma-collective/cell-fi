@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { webhook } from './api/webhook'
 const app = new Hono();
 
 app.get("/", async (c) => {
@@ -7,4 +8,7 @@ app.get("/", async (c) => {
   });
 });
 
-export default app;
+// Routers
+app.route('/sms-webhook', webhook)
+
+export default app
