@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-
+import { env } from 'hono/adapter'
 import { createSmsSenderService } from "../../core/sms/sender"
 import { createSmsParserService } from "../../core/sms/parser"
 import { createCommandResponseService } from '../../core/sms/responder';
@@ -9,12 +9,17 @@ export const webhook = new Hono();
 
 webhook.post('/', async (c) => {
   const body = await c.req.json();
+  const { SMS_API_KEY, SMS_BASE_URL, SENDER_MOBILE } = env<{
+    SMS_API_KEY: string,
+    SENDER_MOBILE: string,
+    SMS_BASE_URL: string
+  }>(c);
 
   const parser = createSmsParserService();
   const smsSender = createSmsSenderService({
-    apiKey: '',
-    defaultSender: '',
-    baseUrl: '',
+    apiKey: SMS_API_KEY,
+    defaultSender: SENDER_MOBILE,
+    baseUrl: SMS_BASE_URL,
   });
   const responder = createCommandResponseService();
   const processor = createCommandProcessor({
@@ -23,9 +28,6 @@ webhook.post('/', async (c) => {
     responseService: responder,
   });
 
-  try {
-    await processor.processWebhook(body);
-  } catch (error) {
-
-  }
+  // todo(jhudiel) - error handling
+  await processor.processWebhook(body);
 });

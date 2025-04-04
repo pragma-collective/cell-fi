@@ -4,7 +4,7 @@ const app = new Hono();
 
 app.get("/", async (c) => {
   return c.json({
-    message: "Hello World",
+    message: "Cell-Fi API",
   });
 });
 
