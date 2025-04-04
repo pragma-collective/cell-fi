@@ -40,22 +40,13 @@ export class CommandProcessor {
    * @returns True if the webhook was processed successfully
    */
   public async processWebhook(webhook: SmsWebhookPayload): Promise<boolean> {
-    // Check if this is a webhook we should process
     if (!this.parserService.shouldProcessWebhook(webhook)) {
       return false;
     }
 
-    // Parse the command
     const command = this.parserService.parseWebhook(webhook);
-
-    // Generate response
     const response = await this.handleCommand(command);
-
-    console.log(response);
-    // Extract the message text
     const messageText = this.responseService.getResponseMessage(response);
-    console.log(messageText)
-    // Send the response back to the user
     const sendResult = await this.senderService.sendCommandResponse(
       command.phoneNumber,
       messageText
@@ -118,7 +109,6 @@ export class CommandProcessor {
 
     const { amount, token, recipient } = command;
 
-    // For now, simulate awaiting confirmation
     return this.responseService.createSendResponse(
       TransferStatus.AWAITING_CONFIRMATION,
       {
