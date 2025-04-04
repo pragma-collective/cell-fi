@@ -4,7 +4,8 @@
     "dev": "bun run --hot src/index.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "bun run src/db/migrate.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "start": "bun run index.ts"
   },
   "dependencies": {
     "@types/pg": "^8.11.11",
