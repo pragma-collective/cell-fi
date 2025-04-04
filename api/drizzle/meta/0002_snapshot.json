@@ -1,6 +1,6 @@
 {
-  "id": "821d5a4d-5e59-4441-a519-857ed12861d2",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "1cbabb6d-490a-4e7f-9978-ae3436bc2feb",
+  "prevId": "a195f052-205d-4a30-85f3-8e61ed531148",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -31,19 +31,25 @@
           "name": "first_name",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "last_name": {
           "name": "last_name",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "phone_number": {
           "name": "phone_number",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "wallet_address": {
+          "name": "wallet_address",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
         },
         "updated_at": {
           "name": "updated_at",
