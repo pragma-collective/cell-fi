@@ -1,4 +1,4 @@
-// import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 
@@ -9,10 +9,10 @@ const roboto = Roboto({
   display: 'swap',
 });
 
-// export const metadata: Metadata = {
-//   title: "Cell-Fi",
-//   description: "Your Financial Bridge, Always Connected.",
-// };
+export const metadata: Metadata = {
+  title: "Cell-Fi",
+  description: "Your Financial Bridge, Always Connected.",
+};
 
 export default function RootLayout({
   children,
