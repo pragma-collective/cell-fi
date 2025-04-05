@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import { sign } from 'hono/jwt';
 import { JWT_SECRET } from "../util/constants";
 import { createSmsSenderService } from '../core/sms/sender';
+import { formatPhoneNumber } from '../util/phoneNumber';
 
 const authRouter = new Hono();
 
@@ -33,9 +34,10 @@ authRouter.post(
   }),
   async (c) => {
     const { phoneNumber } = await c.req.json();
+    const formattedPhoneNumber = formatPhoneNumber(phoneNumber);
 
     const existingUser = await db.query.user.findFirst({
-      where: eq(user.phoneNumber, phoneNumber),
+      where: eq(user.phoneNumber, formattedPhoneNumber),
     });
 
     if (!existingUser) {
