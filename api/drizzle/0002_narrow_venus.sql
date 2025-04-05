@@ -1,0 +1,1 @@
+ALTER TABLE "transactions" ADD COLUMN "destination_address" varchar(255) NOT NULL;

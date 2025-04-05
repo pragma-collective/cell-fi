@@ -8,7 +8,7 @@ userRouter.post(
   "/",
   validator("json", (value, c) => {
     const { username, firstName, lastName, phoneNumber } = value;
-    if (!username ||  !phoneNumber) {
+    if (!username || !phoneNumber) {
       return c.json({ message: "Missing required fields" }, 400);
     }
     return {
