@@ -16,7 +16,7 @@ export default function LoginPage() {
           <div className="flex flex-col gap-5">
           <p className="text-[var(--color-gray-dark)] mb-5">Enter your phone number to continue.</p>
             <input type="text" className="input input--text" placeholder="Phone number" />
-            <button className="button button--primary">Continue →</button>
+            <button className="button button--primary">Continue &nbsp;→</button>
             <p className="text-[var(--color-gray)]">We sent a code to your registered number *******7634</p>
             <div className="grid grid-cols-6 gap-[10px]">
               <input type="number" className="input--text num" />
@@ -26,7 +26,7 @@ export default function LoginPage() {
               <input type="number" className="input--text num" />
               <input type="number" className="input--text num" />
             </div>
-            <p className="text-center text-[var(--color-gray-dark)]">Didn't receive the code? <a className="underline text-[var(--color-gray)]">Click here to resend</a></p>
+            <p className="text-center text-[var(--color-gray-dark)]">Didn't receive the code? <a href="#" className="underline text-[var(--color-gray)]">Click here to resend</a></p>
             <button className="font-light text-[var(--color-gray-dark)]">← Go back</button>
           </div>
         </div>

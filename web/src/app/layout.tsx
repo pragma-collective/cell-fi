@@ -1,8 +1,8 @@
 // import type { Metadata } from "next";
-import { Lato } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./globals.css";
 
-const lato_sans = Lato({
+const roboto = Roboto({
   weight: ['300', '400', '700'],
   style: ['normal', 'italic'],
   subsets: ['latin'],
@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
-      <body className={`text-[16px] h-full font-light bg-[var(--color-dark-purple)] text-white ${lato_sans.className}`}>
+      <body className={`text-[16px] h-full font-light bg-[var(--color-dark-purple)] text-white ${roboto.className}`}>
         {children}
       </body>
     </html>
