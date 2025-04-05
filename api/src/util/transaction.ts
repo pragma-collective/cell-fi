@@ -6,6 +6,7 @@ import {
   transactionStatus,
   transactionType,
 } from "../db/schema/transaction";
+import { getUserWallet } from "./wallet";
 import {
   CreateTransactionParams,
   Transaction,
@@ -19,25 +20,35 @@ export type TransactionStatus = (typeof transactionStatus.enumValues)[number];
 export type TransactionType = (typeof transactionType.enumValues)[number]; // 'send' | 'receive'
 
 export const createTransaction = async ({
-  userId,
+  username = "",
+  ensName = "",
   destinationAddress,
   amount,
   type,
 }: CreateTransactionParams): Promise<Transaction> => {
   return await db.transaction(async (tx) => {
     try {
+      // get user wallet using username or ensName
+      if (!username && !ensName) {
+        throw new Error("Username or ENS name is required");
+      }
+
+      const senderWallet = await getUserWallet(username, ensName);
+
+      if (!senderWallet?.address) {
+        throw new Error("Sender wallet address is missing");
+      }
+
       const sender = await tx.query.user.findFirst({
-        where: eq(user.id, userId),
+        where: eq(user.walletAddress, senderWallet.address.toLowerCase()),
       });
 
       if (!sender) {
         throw new Error("User not found");
       }
 
-      const walletId = sender.circleWalletId;
-
       const walletTokenResponse = await circleClient.getWalletTokenBalance({
-        id: walletId,
+        id: senderWallet?.id ?? "",
       });
 
       if (!walletTokenResponse.data?.tokenBalances?.length) {
@@ -54,7 +65,7 @@ export const createTransaction = async ({
       );
 
       const transactionResponse = await circleClient.createTransaction({
-        walletId,
+        walletId: senderWallet?.id ?? "",
         tokenId: tokenBalance?.token.id ?? "",
         destinationAddress,
         amount: [amount.toString()],
@@ -89,7 +100,7 @@ export const createTransaction = async ({
       const [newTransaction] = await tx
         .insert(transaction)
         .values({
-          userId: sender.id,
+          userId: senderWallet.id,
           type,
           destinationAddress,
           txHash: transactionResponse.data.id,
