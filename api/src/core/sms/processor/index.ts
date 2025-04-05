@@ -281,7 +281,6 @@ export class CommandProcessor {
           }
         );
       }
-      
     }
   }
 
@@ -612,135 +611,154 @@ export class CommandProcessor {
     currentUserApproval: any,
     isApproving: boolean
   ): Promise<Response> {
-    const status = isApproving ? 'accepted' : 'rejected';
+    try {
+      const status = isApproving ? 'accepted' : 'rejected';
 
-    if (!currentUserApproval) {
-      return this.responseService.createUnknownResponse(
-        `${isApproving ? 'APPROVE' : 'REJECT'} code`
-      );
-    }
-
-    // 1. Get the transaction first to check its current status
-    const tx = await db.query.transaction.findFirst({
-      where: eq(transaction.id, currentUserApproval.transactionId),
-      with: {
-        owner: true,
-      },
-    });
-
-    if (!tx) {
-      return this.responseService.createUnknownResponse(
-        `${isApproving ? 'APPROVE' : 'REJECT'} ${currentUserApproval.code}`
-      );
-    }
-
-    // Check if the transaction is already completed or failed
-    if (tx.status === 'success' || tx.status === 'failed') {
-      // Transaction already processed
-      const statusText = tx.status === 'success' ? 'approved' : 'rejected';
-      return {
-        message: `This transaction has already been ${statusText}.`,
-        success: true
-      } as Response;
-    }
-
-    // 2. Update the current user's approval status
-    await db
-      .update(approval)
-      .set({
-        status,
-        updated_at: new Date()
-      })
-      .where(and(
-        eq(approval.approverId, currentUserApproval.id),
-        eq(approval.code, currentUserApproval.code),
-      ));
-
-    // 3. Handle rejection case
-    if (!isApproving) {
-      // Fetch the transaction again to make sure we're working with the latest state
-      const updatedTx = await db.query.transaction.findFirst({
-        where: eq(transaction.id, currentUserApproval.transactionId),
-      });
-
-      // Only update if the transaction isn't already completed or failed
-      if (updatedTx && updatedTx.status !== 'success' && updatedTx.status !== 'failed') {
-        await db
-          .update(transaction)
-          .set({
-            status: 'failed', // rejected status
-            updated_at: new Date()
-          })
-          .where(eq(transaction.id, currentUserApproval.transactionId));
-
-        // Notify the initiator about the rejection
-        const rejectionMessage = this.responseService.createSendResponse(
-          TransferStatus.REJECTED,
-          {
-            amount: tx.amount.toString(),
-            token: 'USDC',
-            recipient: '',
-          }
-        ).message;
-
-        await this.senderService.sendMessage(tx.owner.phoneNumber, rejectionMessage);
+      if (!currentUserApproval) {
+        return this.responseService.createUnknownResponse(
+          `${isApproving ? 'APPROVE' : 'REJECT'} code`
+        );
       }
 
-      return {
-        message: `You rejected the transaction of ${tx.amount} USDC`,
-        success: true
-      } as Response;
-    }
-
-    // 4. Handle approval - check if all approvals are complete
-    const allApprovals = await db
-      .select()
-      .from(approval)
-      .where(eq(approval.transactionId, tx.id));
-
-    const allApproved = allApprovals.every(a => a.status === 'accepted');
-
-    if (allApproved) {
-      // Fetch the transaction again to make sure we're working with the latest state
-      const latestTx = await db.query.transaction.findFirst({
+      // 1. Get the transaction first to check its current status
+      const tx = await db.query.transaction.findFirst({
         where: eq(transaction.id, currentUserApproval.transactionId),
+        with: {
+          owner: true,
+        },
       });
 
-      // Only update if the transaction isn't already completed or failed
-      if (latestTx && latestTx.status !== 'success' && latestTx.status !== 'failed') {
-        // This is the final approval - process the transaction
-        await db
-          .update(transaction)
-          .set({
-            status: 'success', // approved status
-            txHash: 'placeholder',
-            updated_at: new Date(),
-          })
-          .where(eq(transaction.id, tx.id));
-
-        // Notify the initiator
-        const successMessage = this.responseService.createSendResponse(
-          TransferStatus.APPROVED,
-          {
-            recipient: '',
-            amount: tx.amount.toString(),
-            token: 'USDC',
-          }
-        ).message;
-
-        await this.senderService.sendMessage(tx.owner.phoneNumber, successMessage);
+      if (!tx) {
+        return this.responseService.createUnknownResponse(
+          `${isApproving ? 'APPROVE' : 'REJECT'} ${currentUserApproval.code}`
+        );
       }
 
-      // Return response to the approver
-      return {
-        message: `You approved the transaction of ${tx.amount} USDC. The transaction has been executed.`,
-        success: true
-      } as Response;
-    } else {
-      return {
-        message: `You approved the transaction of ${tx.amount} USDC.`,
-        success: true
-      } as Response;
+      // Check if the transaction is already completed or failed
+      if (tx.status === 'success' || tx.status === 'failed') {
+        // Transaction already processed
+        const statusText = tx.status === 'success' ? 'approved' : 'rejected';
+        return {
+          message: `This transaction has already been ${statusText}.`,
+          success: true
+        } as Response;
+      }
+
+      // 2. Update the current user's approval status
+      await db
+        .update(approval)
+        .set({
+          status,
+          updated_at: new Date()
+        })
+        .where(and(
+          eq(approval.approverId, currentUserApproval.id),
+          eq(approval.code, currentUserApproval.code),
+        ));
+
+      // 3. Handle rejection case
+      if (!isApproving) {
+        // Fetch the transaction again to make sure we're working with the latest state
+        const updatedTx = await db.query.transaction.findFirst({
+          where: eq(transaction.id, currentUserApproval.transactionId),
+        });
+
+        // Only update if the transaction isn't already completed or failed
+        if (updatedTx && updatedTx.status !== 'success' && updatedTx.status !== 'failed') {
+          await db
+            .update(transaction)
+            .set({
+              status: 'failed', // rejected status
+              updated_at: new Date()
+            })
+            .where(eq(transaction.id, currentUserApproval.transactionId));
+
+          // Notify the initiator about the rejection
+          const rejectionMessage = this.responseService.createSendResponse(
+            TransferStatus.REJECTED,
+            {
+              amount: tx.amount.toString(),
+              token: 'USDC',
+              recipient: '',
+            }
+          ).message;
+
+          await this.senderService.sendMessage(tx.owner.phoneNumber, rejectionMessage);
+        }
+
+        return {
+          message: `You rejected the transaction of ${tx.amount} USDC`,
+          success: true
+        } as Response;
+      }
+
+      // 4. Handle approval - check if all approvals are complete
+      const allApprovals = await db
+        .select()
+        .from(approval)
+        .where(eq(approval.transactionId, tx.id));
+
+      const allApproved = allApprovals.every(a => a.status === 'accepted');
+
+      if (allApproved) {
+        // Fetch the transaction again to make sure we're working with the latest state
+        const latestTx = await db.query.transaction.findFirst({
+          where: eq(transaction.id, currentUserApproval.transactionId),
+        });
+
+        // Only update if the transaction isn't already completed or failed
+        if (latestTx && latestTx.status !== 'success' && latestTx.status !== 'failed') {
+          const currentUser = await db.query.user.findFirst({
+            where: eq(user.id, latestTx.userId)
+          });
+
+          if (!currentUser || !currentUser.phoneNumber) {
+            return this.responseService.createUnknownResponse("Invalid user");
+          }
+
+          const recepientUser = await db.query.user.findFirst({
+            where: eq(user.walletAddress, latestTx.destinationAddress)
+          });
+
+          if (!recepientUser) {
+            return this.responseService.createUnknownResponse("Invalid recepient");
+          }
+
+          await createTransaction({
+            username: currentUser.username,
+            ensName: currentUser.ensName,
+            destinationEnsName: recepientUser.ensName,
+            amount: latestTx.amount.toString(),
+            type: 'send',
+          });
+
+          // Notify the initiator
+          const successMessage = this.responseService.createSendResponse(
+            TransferStatus.APPROVED,
+            {
+              recipient: '',
+              amount: latestTx.amount.toString(),
+              token: 'USDC',
+            }
+          ).message;
+
+          await this.senderService.sendMessage(currentUser.phoneNumber, successMessage);
+        }
+
+        // Return response to the approver
+        return {
+          message: `You approved the transaction of ${tx.amount} USDC. The transaction has been executed.`,
+          success: true
+        } as Response;
+      } else {
+        return {
+          message: `You approved the transaction of ${tx.amount} USDC.`,
+          success: true
+        } as Response;
+      }
+    } catch (error) {
+      console.error("Failed transaction approval", error instanceof Error ? error?.message : error);
+      return this.responseService.createUnknownResponse("");
     }
   }
 
