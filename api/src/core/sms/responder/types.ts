@@ -45,6 +45,10 @@ export interface ApprovalResponse extends CommandResponse {
   nominatedBy?: string;
 }
 
+export interface RequestResponse extends CommandResponse {
+  paymentCode: string;
+}
+
 export interface UnknownResponse extends CommandResponse {
   originalCommand: string;
   suggestions: string[];
@@ -55,5 +59,6 @@ export type Response =
   | RegisterResponse
   | SendResponse
   | NominateResponse
+  | RequestResponse
   | ApprovalResponse
   | UnknownResponse;

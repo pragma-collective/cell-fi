@@ -29,7 +29,7 @@ export class CommandResponseService {
     ];
 
     return {
-      message: 'Commands: HELP (this message), REGISTER (create wallet), SEND [amount][token] [address/ENS], NOMINATE [phone1] [phone2], ACCEPT/DENY [code]',
+      message: 'Commands: HELP (this message), REGISTER (create wallet), SEND [amount][token] [address/ENS], NOMINATE [phone1] [phone2], ACCEPT/DENY [code], REQUEST [amount][token] [address/ENS]',
       success: true,
       availableCommands
     };
@@ -175,6 +175,74 @@ export class CommandResponseService {
    */
   public createNomineeNotification(nominatorPhone: string, code: string): string {
     return `${nominatorPhone} has nominated you as a cosigner for their transactions. Reply ACCEPT ${code} to confirm or DENY ${code} to decline.`;
+  }
+
+  /**
+   * Creates a response for a requested payment
+   * @param type - The original command type
+   * @param params - Payment request parameters
+   * @returns A formatted payment request response
+   */
+  public createPaymentRequestedResponse(
+    params: {
+      paymentCode: string;
+      amount: string;
+      recipient: string;
+    }
+  ): Response {
+    const { paymentCode, amount, recipient } = params;
+
+    return {
+      message: 'Payment request created successfully. The recipient will be notified.',
+      success: true,
+      paymentCode,
+      amount,
+      recipient,
+    };
+  }
+
+  /**
+   * Creates a message to notify the recipient about a payment request
+   * @param requester - Phone number of the payment requester
+   * @param amount - Amount requested
+   * @param paymentCode - Unique payment code
+   * @returns Message to send to the payment recipient
+   */
+  public createPaymentRecipientNotification(
+    requester: string,
+    amount: number,
+    paymentCode: string
+  ): string {
+    return `
+      ${requester} has requested a payment of ${amount}USDC from you. Reply with PAY ${paymentCode} to proceed with payment`;
+  }
+
+  public createPaymentRequesterNotification(
+    recipient: string,
+    code: string,
+  ): string {
+    return `
+      ${recipient} has made their payment for your payment request: ${code}
+    `
+  }
+
+  /**
+   * Creates a message to notify the payer about payment made
+   * @param recipientNumber - Phone number of the payment requester
+   * @param amount - Amount requested
+   * @returns Message to send to the payment recipient
+   */
+  public createPaidResponseNotification(
+    recipientNumber: string,
+    amount: number,
+  ): Response {
+    return {
+      message: `Thank you for successfully making a payment!`,
+      success: true,
+      paymentCode: '',
+      amount: amount.toString(),
+      recipient: recipientNumber,
+    };
   }
 
   /**
