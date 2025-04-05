@@ -214,6 +214,7 @@ export class CommandProcessor {
           status: "pending",
           txHash: 'placeholder',
           amount: parseInt(amount),
+          destinationAddress: recipientUser.walletAddress,
         })
         .returning();
 
