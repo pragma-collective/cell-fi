@@ -178,6 +178,46 @@ export class CommandResponseService {
   }
 
   /**
+   * Creates a response for a requested payment
+   * @param type - The original command type
+   * @param params - Payment request parameters
+   * @returns A formatted payment request response
+   */
+  public createPaymentRequestedResponse(
+    params: {
+      paymentCode: string;
+      amount: string;
+      recipient: string;
+    }
+  ): Response {
+    const { paymentCode, amount, recipient } = params;
+
+    return {
+      message: 'Payment request created successfully. The recipient will be notified.',
+      success: true,
+      paymentCode,
+      amount,
+      recipient,
+    };
+  }
+
+  /**
+   * Creates a message to notify the recipient about a payment request
+   * @param requester - Phone number of the payment requester
+   * @param amount - Amount requested
+   * @param paymentCode - Unique payment code
+   * @returns Message to send to the payment recipient
+   */
+  public createPaymentRecipientNotification(
+    requester: string,
+    amount: number,
+    paymentCode: string
+  ): string {
+    return `
+      ${requester} has requested a payment of ${amount}USDC from you. Reply with PAY ${paymentCode} to proceed with payment`;
+  }
+
+  /**
    * Creates a response for an unknown command
    * @param originalCommand - The unrecognized command
    * @returns A formatted unknown command response

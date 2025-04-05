@@ -1,17 +1,28 @@
-import { eq, inArray, and } from "drizzle-orm";
-import { nanoid } from 'nanoid';
-import { db } from "../../../db"
-import { user } from "../../../db/schema/user"
-import { transaction } from "../../../db/schema/transaction";
-import { nomination } from "../../../db/schema/nomination";
-import { approval } from "../../../db/schema/approval";
+import {and, eq, inArray} from "drizzle-orm";
+import {nanoid} from 'nanoid';
+import {db} from "../../../db"
+import {user} from "../../../db/schema/user"
+import {transaction} from "../../../db/schema/transaction";
+import {nomination} from "../../../db/schema/nomination";
+import {approval} from "../../../db/schema/approval";
+import {payment} from "../../../db/schema/payment"
 
-import { SmsParserService } from '../parser';
-import { SmsSenderService } from '../sender';
-import { CommandResponseService } from '../responder';
+import {SmsParserService} from '../parser';
+import {SmsSenderService} from '../sender';
+import {CommandResponseService} from '../responder';
+import {generateCode} from './utils'
 
-import { Command, CommandType, NominateCommand, SmsWebhookPayload, NominationResponseCommand, TransactionApprovalCommand } from '../parser/types';
-import { Response, TransferStatus, ApprovalResponse } from '../responder/types';
+import {
+  Command,
+  CommandType,
+  NominateCommand,
+  NominationResponseCommand,
+  RequestCommand,
+  SmsWebhookPayload,
+  TransactionApprovalCommand,
+  PayCommand,
+} from '../parser/types';
+import { ApprovalResponse, Response, TransferStatus } from '../responder/types';
 import { createUserWallet } from '../../../util/wallet';
 import { registerENSName } from '../../../util/ensRegistration';
 
@@ -65,34 +76,6 @@ export class CommandProcessor {
    * @param command - The parsed command to handle
    * @returns Promise resolving to a response object
    */
-  // private async handleCommand(command: Command): Promise<Response> {
-  //   switch (command.type) {
-  //     case CommandType.HELP:
-  //       return this.handleHelpCommand();
-  //
-  //     case CommandType.REGISTER:
-  //       return this.handleRegisterCommand(command.phoneNumber, command.username);
-  //
-  //     case CommandType.SEND:
-  //       return this.handleSendCommand(command);
-  //
-  //     case CommandType.NOMINATE:
-  //       return this.handleNominateCommand(command);
-  //
-  //     case CommandType.APPROVE:
-  //     case CommandType.DENY:
-  //       return this.handleApprovalCommand(command)
-  //     case CommandType.UNKNOWN:
-  //     default:
-  //       return this.handleUnknownCommand(command.rawMessage);
-  //   }
-  // }
-
-  /**
-   * Handles a command and generates an appropriate response
-   * @param command - The parsed command to handle
-   * @returns Promise resolving to a response object
-   */
   private async handleCommand(command: Command): Promise<Response> {
     switch (command.type) {
       case CommandType.HELP:
@@ -114,6 +97,12 @@ export class CommandProcessor {
       case CommandType.APPROVE:
       case CommandType.REJECT:
         return this.handleTransactionApprovalCommand(command as TransactionApprovalCommand);
+
+      case CommandType.REQUEST:
+        return this.handleRequestCommand(command as RequestCommand)
+
+      case CommandType.PAY:
+        return this.handlePayCommand(command as PayCommand);
 
       case CommandType.UNKNOWN:
       default:
@@ -142,16 +131,16 @@ export class CommandProcessor {
       });  
 
       // Use the extracted utility function for ENS registration
-      if (user.walletAddress) {
-        const registrationResult = await registerENSName(username, user.walletAddress);
-        
-        // Log the result - you can customize this based on your needs
-        if (registrationResult.success) {
-          console.log(`ENS registration successful: ${registrationResult.message} Transaction: ${registrationResult.transactionHash}`);
-        } else {
-          console.warn(`ENS registration skipped or failed: ${registrationResult.message}`);
-        }
-      }
+      // if (user.walletAddress) {
+      //   const registrationResult = await registerENSName(username, user.walletAddress);
+      //
+      //   // Log the result - you can customize this based on your needs
+      //   if (registrationResult.success) {
+      //     console.log(`ENS registration successful: ${registrationResult.message} Transaction: ${registrationResult.transactionHash}`);
+      //   } else {
+      //     console.warn(`ENS registration skipped or failed: ${registrationResult.message}`);
+      //   }
+      // }
 
       return this.responseService.createRegisterResponse(
         `Your new wallet has been created: ${user.username}. You can now send tokens or use NOMINATE to add trusted contacts as an extra security layer.`,
@@ -368,167 +357,122 @@ export class CommandProcessor {
     }
   }
 
-  // /**
-  //  * Handles a transaction approval command (APPROVE or REJECT)
-  //  * @param command - The transaction approval command
-  //  * @returns Transaction approval response
-  //  */
-  // private async handleTransactionApprovalCommand(command: TransactionApprovalCommand): Promise<Response> {
-  //   const { phoneNumber, code, type } = command;
-  //   const isApproving = type === CommandType.APPROVE;
-  //
-  //   const currentUser = await db.query.user.findFirst({
-  //       where: eq(user.phoneNumber, phoneNumber),
-  //     }
-  //   );
-  //
-  //   if (!currentUser) {
-  //     return this.responseService.createUnknownResponse(`${type} ${code}`);
-  //   }
-  //
-  //   try {
-  //     // Find the approval record with this code for this user
-  //     const approvals = await db
-  //       .select()
-  //       .from(approval)
-  //       .where(
-  //         and(
-  //           eq(approval.code, code),
-  //           eq(approval.approverId, currentUser.id),
-  //           eq(approval.status, 'pending')
-  //         )
-  //       );
-  //
-  //     if (approvals.length === 0) {
-  //       return this.responseService.createUnknownResponse(`${type} ${code}`);
-  //     }
-  //
-  //     // Get the approval record
-  //     const approvalRecord = approvals[0];
-  //
-  //     // Find the associated transaction
-  //     const transactions = await db
-  //       .select()
-  //       .from(transaction)
-  //       .where(eq(transaction.id, approvalRecord.transactionId));
-  //
-  //     if (transactions.length === 0) {
-  //       return this.responseService.createUnknownResponse(`${type} ${code}`);
-  //     }
-  //
-  //     // Call the transaction approval handler with the found records
-  //     return this.handleTransactionApproval(approvalRecord, isApproving);
-  //   } catch (error) {
-  //     console.error(`Error handling ${type} command:`, error);
-  //     return this.responseService.createUnknownResponse(`${type} ${code}`);
-  //   }
-  // }
-  //
-  // /**
-  //  * Handles a transaction approval command (APPROVE or REJECT)
-  //  * @param command - The transaction approval command
-  //  * @returns Transaction approval response
-  //  */
-  // private async handleTransactionApprovalCommand(command: TransactionApprovalCommand): Promise<Response> {
-  //   const { phoneNumber, code, type } = command;
-  //   const isApproving = type === CommandType.APPROVE;
-  //
-  //   const currentUser = await db.query.user.findFirst({
-  //       where: eq(user.phoneNumber, phoneNumber),
-  //
-  //     }
-  //   );
-  //
-  //   if (!currentUser) {
-  //     return this.responseService.createUnknownResponse(`${type} ${code}`);
-  //   }
-  //
-  //   try {
-  //     // Find the approval record with this code for this user
-  //     const app = await db
-  //       .select()
-  //       .from(approval)
-  //       .where(
-  //         and(
-  //           eq(approval.code, code),
-  //           eq(approval.approverId, phoneNumber)
-  //         )
-  //       )
-  //       .limit(1);
-  //
-  //     if (approval.length === 0) {
-  //       return this.responseService.createUnknownResponse(`${type} ${code}`);
-  //     }
-  //
-  //     // Get the approval record
-  //     const approvalRecord = approval[0];
-  //
-  //     // Find the associated transaction
-  //     const transaction = await db
-  //       .select()
-  //       .from(transactions)
-  //       .where(eq(transactions.id, approvalRecord.transactionId))
-  //       .limit(1);
-  //
-  //     if (transaction.length === 0) {
-  //       return this.responseService.createUnknownResponse(`${type} ${code}`);
-  //     }
-  //
-  //     // Call the transaction approval handler with the found records
-  //     return this.handleTransactionApproval(approvalRecord, isApproving);
-  //   } catch (error) {
-  //     console.error(`Error handling ${type} command:`, error);
-  //     return this.responseService.createUnknownResponse(`${type} ${code}`);
-  //   }
-  // }
+  private async handleRequestCommand(command: RequestCommand): Promise<Response> {
+    const { phoneNumber, type, amount, recipient } = command;
 
-  /**
-   * Handles an approval command (APPROVE or DENY)
-   * @param command - The approval command
-   * @returns Approval response
-   */
-  // private async handleApprovalCommand(command: ApprovalCommand): Promise<Response> {
-  //   const { phoneNumber, code, type } = command;
-  //   const isAccepting = type === CommandType.ACCEPT;
-  //
-  //   try {
-  //     const currentUser = await db.query.user.findFirst({
-  //         where: eq(user.phoneNumber, phoneNumber),
-  //       }
-  //     );
-  //
-  //     if (!currentUser) {
-  //       console.error(`Error handling ${type} command: No current user found`);
-  //       return this.responseService.createUnknownResponse(`${type} ${code}`);
-  //     }
-  //
-  //     // Check if user is nominated
-  //     const result = await db.select()
-  //       .from(approval)
-  //       .where(
-  //         and(
-  //           eq(approval.code, code),
-  //           eq(approval.approverId, currentUser.id),
-  //         )
-  //       );
-  //
-  //     if (result.length < 1) {
-  //       throw new Error('')
-  //     }
-  //
-  //     const nomineeApproval = result[0];
-  //
-  //     return await this.handleTransactionApproval(
-  //       nomineeApproval,
-  //       isAccepting,
-  //     );
-  //   } catch (error) {
-  //     console.error(`Error handling ${type} command`, error);
-  //     return this.responseService.createUnknownResponse(`${type} ${code}`);
-  //   }
-  // }
+    try {
+      const requester = await db.query.user.findFirst({
+        where: eq(user.phoneNumber, phoneNumber),
+      });
 
-  /**
+      if (!requester) {
+        return this.responseService.createGenericResponse('Unable to request payment. Please try again later.', CommandType.REQUEST);
+      }
+
+      const recipientUser = await db.query.user.findFirst({
+        where: eq(user.username, recipient),
+      });
+
+      if (!recipientUser) {
+        return this.responseService.createGenericResponse("Unable to request payment. Recipient doesn't exist.", CommandType.REQUEST);
+      }
+
+      let paymentCode = '';
+      let isUnique = false;
+      while (!isUnique) {
+        paymentCode = generateCode()
+
+        const existingPayment = await db.query.payment.findFirst({
+          where: eq(payment.paymentCode, paymentCode),
+        });
+
+        if (!existingPayment) {
+          isUnique = true;
+        }
+      }
+
+      await db.insert(payment).values({
+        requesterId: requester.id,
+        recipientId: recipientUser.id,
+        paymentCode,
+        amount: parseInt(amount),
+        status: 'pending',
+      }).returning();
+
+      const notificationMessage = this.responseService.createPaymentRecipientNotification(
+        requester.username!,
+        parseInt(amount),
+        paymentCode
+      );
+
+      await this.senderService.sendMessage(
+        recipientUser.phoneNumber!,
+        notificationMessage
+      );
+
+      return this.responseService.createPaymentRequestedResponse({
+        paymentCode,
+        amount,
+        recipient: recipientUser?.username || recipientUser.phoneNumber || '',
+      });
+
+    } catch (error) {
+      console.error(`Unable to request payment to user`, error);
+      return this.responseService.createUnknownResponse(type);
+    }
+  }
+
+  private async handlePayCommand(command: PayCommand): Promise<Response> {
+    const { code, phoneNumber, type } = command;
+    try {
+      const currentUser = await db.query.user.findFirst({
+          where: eq(user.phoneNumber, phoneNumber),
+        }
+      );
+
+      if (!currentUser) {
+        return this.responseService.createUnknownResponse(`${type} ${code}`);
+      }
+
+      const paymentTx = await db.query.payment
+        .findFirst({
+          where: and(
+            eq(payment.paymentCode, code),
+            eq(payment.requesterId, currentUser.id)
+          )
+        });
+
+      if (!paymentTx) {
+        return this.responseService.createGenericResponse(
+          `Unable to find payment. Please check your code.`,
+          CommandType.PAY,
+        );
+      }
+
+      // todo(albert/joe) - pay transaction
+
+      await db.insert(transaction)
+        .values({
+          userId: currentUser.id,
+          type: 'send',
+          status: 'success', // optimistic success
+          txHash: 'placeholder',
+          amount: paymentTx.amount
+        })
+        .returning();
+
+      return this.responseService.createGenericResponse(
+        `Unable to find payment. Please check your code.`,
+        CommandType.PAY,
+      );
+    } catch (error) {
+      console.error('Unable to proceed with payment to user', error);
+      return this.responseService.createUnknownResponse(type);
+    }
+  }
+
+
+    /**
    * Handles a transaction approval command (APPROVE or REJECT)
    * @param command - The transaction approval command
    * @returns Transaction approval response
@@ -577,7 +521,6 @@ export class CommandProcessor {
         return this.responseService.createUnknownResponse(`${type} ${code}`);
       }
 
-      // Call the transaction approval handler with the found records
       return this.handleTransactionApproval(approvalRecord, isApproving);
     } catch (error) {
       console.error(`Error handling ${type} command:`, error);
@@ -603,7 +546,6 @@ export class CommandProcessor {
       );
     }
 
-    // 1. Get the transaction first to check its current status
     const tx = await db.query.transaction.findFirst({
       where: eq(transaction.id, currentUserApproval.transactionId),
       with: {
@@ -627,7 +569,6 @@ export class CommandProcessor {
       } as Response;
     }
 
-    // 2. Update the current user's approval status
     await db
       .update(approval)
       .set({
@@ -691,11 +632,12 @@ export class CommandProcessor {
 
       // Only update if the transaction isn't already completed or failed
       if (latestTx && latestTx.status !== 'success' && latestTx.status !== 'failed') {
-        // This is the final approval - process the transaction
+
+        // todo(albert/joe) - send transaction
         await db
           .update(transaction)
           .set({
-            status: 'success', // approved status
+            status: 'success', // approved status (optimistic)
             txHash: 'placeholder',
             updated_at: new Date(),
           })
@@ -777,7 +719,7 @@ export class CommandProcessor {
       return this.responseService.createNominateResponse([nominee1, nominee2], code);
     } catch (error) {
       console.error('Error processing nomination:', error);
-      return this.responseService.createNominateResponse([], '', false);
+      return this.responseService.createGenericResponse('Unable to create nominations', '')
     }
   }
 
