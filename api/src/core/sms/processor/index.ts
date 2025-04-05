@@ -7,6 +7,7 @@ import { CommandResponseService } from '../responder';
 import { Command, CommandType, SmsWebhookPayload } from '../parser/types';
 import { Response, TransferStatus } from '../responder/types';
 import { createUserWallet } from '../../../util/wallet';
+import { registerENSName } from '../../../util/ensRegistration';
 
 /**
  * Dependencies required by the command processor
@@ -98,10 +99,23 @@ export class CommandProcessor {
         username,
       });  
 
+      // Use the extracted utility function for ENS registration
+      if (user.walletAddress) {
+        const registrationResult = await registerENSName(username, user.walletAddress);
+        
+        // Log the result - you can customize this based on your needs
+        if (registrationResult.success) {
+          console.log(`ENS registration successful: ${registrationResult.message} Transaction: ${registrationResult.transactionHash}`);
+        } else {
+          console.warn(`ENS registration skipped or failed: ${registrationResult.message}`);
+        }
+      }
+
       return this.responseService.createRegisterResponse(
         `Your new wallet has been created: ${user.ensName}`,
         user.walletAddress,
       );
+      
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       return this.responseService.createRegisterResponse(

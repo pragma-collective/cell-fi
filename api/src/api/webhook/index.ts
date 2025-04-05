@@ -16,11 +16,13 @@ webhook.post('/', async (c) => {
   }>(c);
 
   const parser = createSmsParserService();
+
   const smsSender = createSmsSenderService({
     apiKey: SMS_API_KEY,
     defaultSender: SENDER_MOBILE,
     baseUrl: SMS_BASE_URL,
   });
+
   const responder = createCommandResponseService();
   const processor = createCommandProcessor({
     parserService: parser,
