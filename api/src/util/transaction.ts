@@ -45,7 +45,9 @@ export const createTransaction = async ({
       const destinationAddress = destinationWallet.address;
 
       const sender = await tx.query.user.findFirst({
-        where: (user, { eq }) => eq(user.circleWalletId, senderWallet.id),
+        where: (user, { eq }) =>
+          eq(user.circleWalletId, senderWallet.id) &&
+          eq(user.walletAddress, senderWallet.address),
       });
 
       if (!sender) {
