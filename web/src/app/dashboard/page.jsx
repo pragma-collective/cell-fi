@@ -8,7 +8,7 @@ export default function Dashboard() {
     <div className="h-full p-5">
       <div className="grid grid-cols-12 mb-5">
         <div className="col-span-3 xl:col-span-2 flex items-center">
-          <Image src="/logo.svg" width={250} height={55} className="max-w-[120px] h-auto" alt="logo" />
+          <Image src="/logo.svg" width={250} height={55} className="max-w-[45px] h-auto" alt="logo" />
         </div>
         <div className="col-span-9 xl:col-span-10">
           <div className="flex items-center justify-between">
@@ -16,7 +16,7 @@ export default function Dashboard() {
             <div className="flex items-center gap-[10px]">
               <img src="https://randomuser.me/api/portraits/men/93.jpg" width={128} height={128} className="w-[32px] h-[32px] object-cover rounded-full" alt="" />
               <div>
-                <h6 className="!text-[14px] !font-bold text-[var(--color-gray)]">Jhuds Bayutot</h6>
+                <h6 className="!text-[14px] !font-bold text-[var(--color-gray)]">John Doe</h6>
                 <p className="!text-[12px] text-right text-[var(--color-gray-dark)]">********7634</p>
                 </div>
             </div>
