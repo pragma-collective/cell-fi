@@ -4,6 +4,7 @@ import initiateDeveloperControlledWalletsClient from "./circleClient";
 import { BLOCKCHAIN_ID, CIRCLE_ACCOUNT_TYPE, ENS_DOMAIN } from "./constants";
 import { sql } from "drizzle-orm";
 import { CreateUserWalletParams } from "../types/wallet";
+import { ENSRegistrar } from "./ens";
 
 // Export for testing
 export const getCircleClient = () => initiateDeveloperControlledWalletsClient();
@@ -21,7 +22,31 @@ export const createUserWallet = async ({
   // Start a database transaction
   return await db.transaction(async (tx) => {
     try {
+      const { ENS_CONTRACT_ADDRESS, RPC_PROVIDER_URL, PRIVATE_KEY } = process.env;
+
+      const contractAddress = ENS_CONTRACT_ADDRESS || "";
+      const providerUrl = RPC_PROVIDER_URL || "";
+      const privateKey = PRIVATE_KEY;
+
+      if (!contractAddress || !providerUrl || !privateKey) {
+        console.error("ENS registration configuration incomplete.");
+        throw new Error("Something went wrong. Please try again.");
+      }
+
+      const ensRegistrar = new ENSRegistrar(
+        contractAddress,
+        providerUrl,
+        privateKey,
+      );
+  
+      // Check if the ENS name is available
+      const isAvailable = await ensRegistrar.isNameAvailable(username);
+
       const ensName = getENSName(username);
+
+      if (!isAvailable) {
+        throw new Error("Username is not available.");
+      }
       
       // Check if user already exists
       const existingUser = await tx
