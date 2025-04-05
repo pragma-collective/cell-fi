@@ -71,6 +71,14 @@ export const createTransaction = async ({
         throw new Error("Failed to create transaction");
       }
 
+      const generatedTransaction = await circleClient.getTransaction({
+        id: transactionResponse.data.id,
+      });
+
+      if (!generatedTransaction) {
+        throw new Error("Failed to retrieve transaction");
+      }
+
       // parse state to transaction status
       const state = transactionResponse.data.state;
       let status: TransactionStatus = "success";
@@ -93,7 +101,7 @@ export const createTransaction = async ({
           userId: sender.id,
           type,
           destinationAddress,
-          txHash: transactionResponse.data.id,
+          txHash: generatedTransaction.data?.transaction?.txHash ?? "",
           status,
           amount: Math.round(Number(amount)),
         })
