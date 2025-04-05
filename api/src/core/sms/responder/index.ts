@@ -213,26 +213,21 @@ export class CommandResponseService {
     amount: number,
     paymentCode: string
   ): string {
-    return `
-      ${requester} has requested a payment of ${amount}USDC from you. Reply with PAY ${paymentCode} to proceed with payment`;
+    return `${requester} has requested a payment of ${amount}USDC from you. Reply with PAY ${paymentCode} to proceed with payment`;
   }
 
   public createPaymentRequesterNotification(
     recipient: string,
     code: string,
   ): string {
-    return `
-      ${recipient} has made their payment for your payment request: ${code}
-    `
+    return `${recipient} has made their payment for your payment request: ${code}`
   }
 
   public createSendRecipientNotification(
     sender: string,
     amount: string,
   ): string {
-    return `
-      You have received ${amount}USDC from ${sender}.
-    `
+    return `You have received ${amount}USDC from ${sender}.`
   }
 
   /**
