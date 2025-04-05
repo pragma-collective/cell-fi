@@ -1,59 +1,66 @@
-import { ethers } from 'ethers';
+import { ethers } from "ethers";
 
 // The ABI of the ENS registrar contract
 const ENS_REGISTRAR_ABI = [
   {
-    "inputs": [{"internalType": "address", "name": "_registry", "type": "address"}],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
+    inputs: [{ internalType: "address", name: "_registry", type: "address" }],
+    stateMutability: "nonpayable",
+    type: "constructor",
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {"indexed": true, "internalType": "string", "name": "label", "type": "string"},
-      {"indexed": true, "internalType": "address", "name": "owner", "type": "address"}
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "string", name: "label", type: "string" },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
     ],
-    "name": "NameRegistered",
-    "type": "event"
+    name: "NameRegistered",
+    type: "event",
   },
   {
-    "inputs": [{"internalType": "string", "name": "label", "type": "string"}],
-    "name": "available",
-    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-    "stateMutability": "view",
-    "type": "function"
+    inputs: [{ internalType: "string", name: "label", type: "string" }],
+    name: "available",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
   },
   {
-    "inputs": [],
-    "name": "chainId",
-    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
+    inputs: [],
+    name: "chainId",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
   },
   {
-    "inputs": [],
-    "name": "coinType",
-    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
+    inputs: [],
+    name: "coinType",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
   },
   {
-    "inputs": [
-      {"internalType": "string", "name": "label", "type": "string"},
-      {"internalType": "address", "name": "owner", "type": "address"}
+    inputs: [
+      { internalType: "string", name: "label", type: "string" },
+      { internalType: "address", name: "owner", type: "address" },
     ],
-    "name": "register",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    name: "register",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
   },
   {
-    "inputs": [],
-    "name": "registry",
-    "outputs": [{"internalType": "contract IL2Registry", "name": "", "type": "address"}],
-    "stateMutability": "view",
-    "type": "function"
-  }
+    inputs: [],
+    name: "registry",
+    outputs: [
+      { internalType: "contract IL2Registry", name: "", type: "address" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
 ];
 
 export class ENSRegistrar {
@@ -67,15 +74,27 @@ export class ENSRegistrar {
    * @param providerUrl The provider URL (e.g., Infura, Alchemy)
    * @param privateKey Optional private key for signing transactions
    */
-  constructor(contractAddress: string, providerUrl: string, privateKey?: string) {
+  constructor(
+    contractAddress: string,
+    providerUrl: string,
+    privateKey?: string
+  ) {
     this.provider = new ethers.JsonRpcProvider(providerUrl);
-    
+
     if (privateKey) {
       this.signer = new ethers.Wallet(privateKey, this.provider);
-      this.contract = new ethers.Contract(contractAddress, ENS_REGISTRAR_ABI, this.signer);
+      this.contract = new ethers.Contract(
+        contractAddress,
+        ENS_REGISTRAR_ABI,
+        this.signer
+      );
     } else {
       this.signer = null;
-      this.contract = new ethers.Contract(contractAddress, ENS_REGISTRAR_ABI, this.provider);
+      this.contract = new ethers.Contract(
+        contractAddress,
+        ENS_REGISTRAR_ABI,
+        this.provider
+      );
     }
   }
 
@@ -88,7 +107,7 @@ export class ENSRegistrar {
     try {
       return await this.contract.available(label);
     } catch (error) {
-      console.error('Error checking name availability:', error);
+      console.error("Error checking name availability:", error);
       throw error;
     }
   }
@@ -99,16 +118,19 @@ export class ENSRegistrar {
    * @param ownerAddress The address that will own the name
    * @returns Promise<ethers.TransactionResponse> The transaction response
    */
-  async registerName(label: string, ownerAddress: string): Promise<ethers.TransactionResponse> {
+  async registerName(
+    label: string,
+    ownerAddress: string
+  ): Promise<ethers.TransactionResponse> {
     if (!this.signer) {
-      throw new Error('Cannot register name: no signer provided');
+      throw new Error("Cannot register name: no signer provided");
     }
 
     try {
       const tx = await this.contract.register(label, ownerAddress);
       return tx;
     } catch (error) {
-      console.error('Error registering name:', error);
+      console.error("Error registering name:", error);
       throw error;
     }
   }
@@ -121,7 +143,7 @@ export class ENSRegistrar {
     try {
       return await this.contract.chainId();
     } catch (error) {
-      console.error('Error getting chain ID:', error);
+      console.error("Error getting chain ID:", error);
       throw error;
     }
   }
@@ -134,7 +156,7 @@ export class ENSRegistrar {
     try {
       return await this.contract.coinType();
     } catch (error) {
-      console.error('Error getting coin type:', error);
+      console.error("Error getting coin type:", error);
       throw error;
     }
   }
@@ -147,7 +169,7 @@ export class ENSRegistrar {
     try {
       return await this.contract.registry();
     } catch (error) {
-      console.error('Error getting registry address:', error);
+      console.error("Error getting registry address:", error);
       throw error;
     }
   }
@@ -157,10 +179,41 @@ export class ENSRegistrar {
    * @param callback The callback function to execute when an event is emitted
    * @returns The event listener that can be removed later
    */
-  onNameRegistered(callback: (label: string, owner: string, event: ethers.EventLog) => void) {
-    return this.contract.on('NameRegistered', (label, owner, event) => {
+  onNameRegistered(
+    callback: (label: string, owner: string, event: ethers.EventLog) => void
+  ) {
+    return this.contract.on("NameRegistered", (label, owner, event) => {
       callback(label, owner, event);
     });
+  }
+}
+
+export class ENSResolver {
+  private provider: ethers.Provider;
+  constructor(provider: string) {
+    this.provider = new ethers.JsonRpcProvider(provider);
+  }
+
+  // Resolves an ENS name to an Ethereum address.
+  async resolveName(name: string) {
+    try {
+      const address = await this.provider.resolveName(name);
+      return address;
+    } catch (error) {
+      console.error("Error resolving name:", error);
+      return null;
+    }
+  }
+
+  // Looks up the ENS name associated with an Ethereum address.
+  async lookupAddress(address: string) {
+    try {
+      const ensName = await this.provider.lookupAddress(address);
+      return ensName;
+    } catch (error) {
+      console.error("Error looking up address:", error);
+      return null;
+    }
   }
 }
 
@@ -169,10 +222,10 @@ export class ENSRegistrar {
 //   '0xYourContractAddress',
 //   'https://eth-mainnet.g.alchemy.com/v2/YOUR_API_KEY'
 // );
-// 
+//
 // // Read-only operations
 // const isAvailable = await ensRegistrar.isNameAvailable('myname');
-// 
+//
 // // Write operations (require signer)
 // const ensRegistrarWithSigner = new ENSRegistrar(
 //   '0xYourContractAddress',

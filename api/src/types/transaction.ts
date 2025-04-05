@@ -1,7 +1,8 @@
 import { TransactionType, TransactionStatus } from "../util/transaction";
 
 export interface CreateTransactionParams {
-  userId: string;
+  username?: string;
+  ensName?: string;
   destinationAddress: string;
   amount: number;
   type: TransactionType;
