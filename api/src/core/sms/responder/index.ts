@@ -69,9 +69,10 @@ export class CommandResponseService {
       token: string;
       ensName?: string;
       transactionHash?: string;
+      pendingApproval?: boolean;
     }
   ): SendResponse {
-    const { recipient, amount, token, ensName, transactionHash } = params;
+    const { recipient, amount, token, ensName, transactionHash, pendingApproval } = params;
     let message: string;
 
     switch (status) {
@@ -82,7 +83,22 @@ export class CommandResponseService {
         break;
 
       case TransferStatus.AWAITING_CONFIRMATION:
-        message = `Please confirm you want to send ${amount} ${token} to ${ensName ? `${recipient} (${ensName})` : recipient}. Reply YES to confirm.`;
+        message = `Successfully initiated transfer of ${amount} ${token} to ${ensName || recipient}.`;
+        // message = `Please confirm you want to send ${amount} ${token} to ${ensName ? `${recipient} (${ensName})` : recipient}. Reply YES to confirm.`;
+        break;
+
+      case TransferStatus.PENDING_APPROVAL:
+        message = `Your transaction of ${amount} ${token} to ${ensName || recipient} is pending approval from your nominated cosigners.`;
+        break;
+
+      case TransferStatus.APPROVED:
+        // message = `Your transaction of ${amount} ${token} to ${ensName || recipient} has been approved and executed. Transaction hash: ${transactionHash}`;
+        message = `Your transaction of ${amount} ${token} has been approved and executed.`;
+        break;
+
+      case TransferStatus.REJECTED:
+        // message = `Your transaction of ${amount} ${token} to ${ensName || recipient} was rejected by a cosigner.`;
+        message = `Your recent transaction of ${amount} ${token} was rejected by a cosigner.`;
         break;
 
       case TransferStatus.FAILED:
@@ -92,21 +108,23 @@ export class CommandResponseService {
       case TransferStatus.INVALID:
         message = `Invalid transfer request. Please check the recipient address and try again.`;
         break;
-
-      default:
-        message = ''
-        break;
     }
 
     return {
       message,
-      success: status === TransferStatus.INITIATED || status === TransferStatus.AWAITING_CONFIRMATION,
+      success: [
+        TransferStatus.INITIATED,
+        TransferStatus.AWAITING_CONFIRMATION,
+        TransferStatus.PENDING_APPROVAL,
+        TransferStatus.APPROVED
+      ].includes(status),
       status,
       recipient,
       amount,
       token,
       ensName,
-      transactionHash
+      transactionHash,
+      pendingApproval
     };
   }
 

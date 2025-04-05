@@ -30,6 +30,7 @@ export interface SendResponse extends CommandResponse {
   ensName?: string;
   amount: string;
   token: string;
+  pendingApproval?: boolean;
 }
 
 // Add new response types for nominations

@@ -5,7 +5,6 @@ import {
   RegisterCommand,
   SendCommand,
   NominateCommand,
-  ApprovalCommand,
   UnknownCommand,
   SmsWebhookPayload
 } from './types';
@@ -64,6 +63,12 @@ export class SmsParserService {
         return this.parseSendCommand(message, phoneNumber, parts);
       case CommandType.NOMINATE:
         return this.parseNominateCommand(message, phoneNumber, parts);
+      case CommandType.ACCEPT:
+      case CommandType.DENY:
+        return this.parseNominationResponseCommand(message, phoneNumber, parts, commandText as CommandType.ACCEPT | CommandType.DENY);
+      case CommandType.APPROVE:
+      case CommandType.REJECT:
+        return this.parseTransactionApprovalCommand(message, phoneNumber, parts, commandText as CommandType.APPROVE | CommandType.REJECT);
       default:
         return this.createUnknownCommand(phoneNumber, message);
     }
@@ -176,28 +181,28 @@ export class SmsParserService {
   }
 
   /**
-   * Parses an approval command (ACCEPT or DENY)
+   * Parses a nomination response command (ACCEPT or DENY)
    * @param message - The original message
    * @param phoneNumber - The sender's phone number
    * @param parts - The message split into parts
    * @param commandType - Either ACCEPT or DENY
-   * @returns An approval command if valid, otherwise an unknown command
+   * @returns A nomination response command if valid, otherwise an unknown command
    * @private
    */
-  private parseApprovalCommand(
+  private parseNominationResponseCommand(
     message: string,
     phoneNumber: string,
     parts: string[],
     commandType: CommandType.ACCEPT | CommandType.DENY
-  ): ApprovalCommand | UnknownCommand {
+  ) {
+  // ): NominationResponseCommand | UnknownCommand {
     if (parts.length !== 2) {
       return this.createUnknownCommand(phoneNumber, message);
     }
 
     const code = parts[1];
-    //
-    // // Basic validation - ensure code is in the expected format (e.g., alphanumeric)
-    // // Adjust the regex as needed for your code format
+
+    // Basic validation - ensure code is in the expected format
     // const codeRegex = /^[A-Za-z0-9]{6,10}$/;
     // if (!codeRegex.test(code)) {
     //   return this.createUnknownCommand(phoneNumber, message);
@@ -223,6 +228,42 @@ export class SmsParserService {
       type: CommandType.UNKNOWN,
       rawMessage: message,
       phoneNumber
+    };
+  }
+
+  /**
+   * Parses a transaction approval command (APPROVE or REJECT)
+   * @param message - The original message
+   * @param phoneNumber - The sender's phone number
+   * @param parts - The message split into parts
+   * @param commandType - Either APPROVE or REJECT
+   * @returns A transaction approval command if valid, otherwise an unknown command
+   * @private
+   */
+  private parseTransactionApprovalCommand(
+    message: string,
+    phoneNumber: string,
+    parts: string[],
+    commandType: CommandType.APPROVE | CommandType.REJECT
+  ) {
+  // ): TransactionApprovalCommand | UnknownCommand {
+    if (parts.length !== 2) {
+      return this.createUnknownCommand(phoneNumber, message);
+    }
+
+    const code = parts[1];
+
+    // Basic validation - ensure code is in the expected format
+    const codeRegex = /^[A-Za-z0-9]{6,10}$/;
+    if (!codeRegex.test(code)) {
+      return this.createUnknownCommand(phoneNumber, message);
+    }
+
+    return {
+      type: commandType,
+      rawMessage: message,
+      phoneNumber,
+      code
     };
   }
 }
