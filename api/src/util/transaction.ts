@@ -22,7 +22,7 @@ export type TransactionType = (typeof transactionType.enumValues)[number]; // 's
 export const createTransaction = async ({
   username = "",
   ensName = "",
-  destinationAddress,
+  destinationEnsName,
   amount,
   type,
 }: CreateTransactionParams): Promise<Transaction> => {
@@ -38,6 +38,12 @@ export const createTransaction = async ({
       if (!senderWallet?.address) {
         throw new Error("Sender wallet address is missing");
       }
+
+      const destinationWallet = await getUserWallet("", destinationEnsName);
+      if (!destinationWallet?.address) {
+        throw new Error("Destination wallet address is missing");
+      }
+      const destinationAddress = destinationWallet.address;
 
       const sender = await tx.query.user.findFirst({
         where: eq(user.walletAddress, senderWallet.address.toLowerCase()),

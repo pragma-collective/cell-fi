@@ -3,7 +3,7 @@ import { TransactionType, TransactionStatus } from "../util/transaction";
 export interface CreateTransactionParams {
   username?: string;
   ensName?: string;
-  destinationAddress: string;
+  destinationEnsName: string;
   amount: number;
   type: TransactionType;
 }
