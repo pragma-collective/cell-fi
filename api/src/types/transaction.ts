@@ -4,7 +4,7 @@ export interface CreateTransactionParams {
   username?: string;
   ensName?: string;
   destinationEnsName: string;
-  amount: number;
+  amount: string;
   type: TransactionType;
 }
 

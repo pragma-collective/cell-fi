@@ -14,6 +14,7 @@ import { Command, CommandType, NominateCommand, SmsWebhookPayload, NominationRes
 import { Response, TransferStatus, ApprovalResponse } from '../responder/types';
 import { createUserWallet } from '../../../util/wallet';
 import { registerENSName } from '../../../util/ensRegistration';
+import { createTransaction } from '../../../util/transaction';
 
 export interface CommandProcessorDependencies {
   parserService: SmsParserService;
@@ -196,6 +197,14 @@ export class CommandProcessor {
       return this.responseService.createUnknownResponse("");
     }
 
+    const recipientUser = await db.query.user.findFirst({
+      where: eq(user.username, recipient),
+    });
+
+    if (!recipientUser) {
+      return this.responseService.createUnknownResponse("");
+    }
+
     if (currentUser.requiresApproval) {
       // create transaction
       const createdTx = await db.insert(transaction)
@@ -205,6 +214,7 @@ export class CommandProcessor {
           status: "pending",
           txHash: 'placeholder',
           amount: parseInt(amount),
+          destinationAddress: recipientUser.walletAddress,
         })
         .returning();
 
@@ -244,27 +254,34 @@ export class CommandProcessor {
       );
 
     } else {
-      // todo(abet/joe) - send transaction
-
-      // create transaction
-      await db.insert(transaction)
-        .values({
-          userId: currentUser.id,
-          type: "send",
-          status: "success", // optimistic
-          txHash: 'placeholder',
-          amount: parseInt(amount),
-        })
-        .returning();
-
-      return this.responseService.createSendResponse(
-        TransferStatus.AWAITING_CONFIRMATION,
-        {
-          recipient,
-          amount,
-          token,
-        }
-      );
+      try {
+        await createTransaction({
+          username: currentUser.username,
+          ensName: currentUser.ensName,
+          destinationEnsName: recipientUser.ensName,
+          amount: amount,
+          type: 'send',
+        });
+  
+        return this.responseService.createSendResponse(
+          TransferStatus.AWAITING_CONFIRMATION,
+          {
+            recipient,
+            amount,
+            token,
+          }
+        );
+      } catch(error) {
+        return this.responseService.createSendResponse(
+          TransferStatus.FAILED,
+          {
+            recipient,
+            amount,
+            token,
+          }
+        );
+      }
+      
     }
   }
 
