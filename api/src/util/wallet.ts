@@ -118,9 +118,9 @@ export const createUserWallet = async ({
 
 export const getUserWallet = async (username: string, ensName: string) => {
   try {
-    const { RPC_PROVIDER_URL } = process.env;
+    const { SEPOLIA_PROVIDER_URL } = process.env;
 
-    const providerUrl = RPC_PROVIDER_URL || "";
+    const providerUrl = SEPOLIA_PROVIDER_URL || "";
 
     if (!providerUrl) {
       console.error("ENS registration configuration incomplete.");
