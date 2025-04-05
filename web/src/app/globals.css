@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #0AE4D0;
+  --color-primary-hover: #0AC4B1;
+  --color-secondary: #21167A;
+  --color-tertiary: #7282F9;
+  --color-gray: #E2E2E2;
+  --color-gray-dark: #8a8592;
+  --color-dark-purple: #2c2638;
+  --color-english-violet: #3c364c;
+}
+h1, .h1 {
+  @apply text-[40px];
+}
+h2, .h2 {
+  @apply text-[36px];
+}
+h3, .h3 {
+  @apply text-[30px];
+}
+h4, .h4 {
+  @apply text-[24px];
+}
+h5, .h5 {
+  @apply text-[20px];
+}
+h6, .h6 {
+  @apply text-[18px];
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance:textfield;
+}
+
+.input--text {
+  @apply w-full p-[15px] rounded-[4px] bg-[var(--color-english-violet)] font-light text-[18px] border border-[var(--color-english-violet)] focus:border-white;
+}
+.input--text:focus {
+  outline: none!important ;
+}
+.num {
+  @apply text-center text-[36px] leading-none;
+}
+.button {
+  @apply font-light p-[15px] cursor-pointer transition-all text-[18px];
+}
+.button--primary {
+  @apply rounded-[4px] bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)];
+}
+
+table th,
+table td {
+  @apply py-[10px] text-left;
+}
+table a {
+  @apply text-[var(--color-secondary)] hover:underline;
+}
