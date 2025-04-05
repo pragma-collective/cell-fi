@@ -44,30 +44,9 @@ export const createTransaction = async ({
       }
       const destinationAddress = destinationWallet.address;
 
-      const walletTokenResponse = await circleClient.getWalletTokenBalance({
-        id: senderWallet.id,
-      });
-
-      if (!walletTokenResponse.data?.tokenBalances?.length) {
-        throw new Error("Failed to get wallet token balance");
-      }
-
-      const tokenBalance = walletTokenResponse.data?.tokenBalances?.find(
-        (tokenBalance) => {
-          return (
-            tokenBalance.token.symbol === "USDC" &&
-            tokenBalance.token.blockchain === BLOCKCHAIN_ID
-          );
-        }
-      );
-
-      if (!tokenBalance) {
-        throw new Error("Token balance not found");
-      }
-
       const transactionResponse = await circleClient.createTransaction({
         walletId: senderWallet.id,
-        tokenId: tokenBalance.token.id,
+        tokenId: "4b8daacc-5f47-5909-a3ba-30d171ebad98", // USDC
         destinationAddress,
         amount: [amount.toString()],
         fee: {
