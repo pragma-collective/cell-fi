@@ -38,16 +38,6 @@ export async function registerENSName(
 			privateKey,
 		);
 
-		// Check if the ENS name is available
-		const isAvailable = await ensRegistrar.isNameAvailable(ensName);
-
-		if (!isAvailable) {
-			return {
-				success: false,
-				message: `ENS name "${ensName}" is not available.`,
-			};
-		}
-
 		// Register ENS name for the wallet address
 		const tx = await ensRegistrar.registerName(ensName, walletAddress);
 
