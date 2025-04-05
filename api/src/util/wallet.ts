@@ -116,7 +116,7 @@ export const createUserWallet = async ({
   });
 };
 
-export const getUserWallet = async (username: string, ensName: string) => {
+export const getUserWallet = async (ensName: string) => {
   try {
     const { SEPOLIA_PROVIDER_URL } = process.env;
 
