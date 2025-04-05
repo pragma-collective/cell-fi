@@ -1,4 +1,3 @@
-import { and, eq, inArray } from "drizzle-orm";
 import { eq, inArray, and, or } from "drizzle-orm";
 import { nanoid } from 'nanoid';
 import { db } from "../../../db"
@@ -65,12 +64,19 @@ export class CommandProcessor {
     const command = this.parserService.parseWebhook(webhook);
     const response = await this.handleCommand(command);
     const messageText = this.responseService.getResponseMessage(response);
-    const sendResult = await this.senderService.sendCommandResponse(
-      command.phoneNumber,
-      messageText
-    );
 
-    return sendResult.success;
+    let sendResult = false;
+    if (response.message !== 'Command not recognized. Text HELP to see available commands.') {
+      const result = await this.senderService.sendCommandResponse(
+        command.phoneNumber,
+        messageText
+      );
+
+      sendResult = result.success;
+    }
+
+
+    return sendResult;
   }
 
   /**
