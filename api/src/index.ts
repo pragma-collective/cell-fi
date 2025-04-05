@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { jwt } from "hono/jwt";
+import { cors } from "hono/cors";
 import { webhook } from "./api/webhook";
 import userRouter from "./routes/user";
 import authRouter from "./routes/auth";
@@ -8,6 +9,8 @@ import transactionRouter from "./routes/transaction";
 import { JWT_SECRET } from "./util/constants";
 
 const app = new Hono();
+
+app.use('/*', cors());
 
 app.use(
   "/me/*",
