@@ -50,6 +50,13 @@
       "when": 1743866924411,
       "tag": "0007_ancient_the_phantom",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1743879736844,
+      "tag": "0008_chemical_green_goblin",
+      "breakpoints": true
     }
   ]
 }

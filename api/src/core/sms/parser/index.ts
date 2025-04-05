@@ -6,7 +6,9 @@ import {
   SendCommand,
   NominateCommand,
   UnknownCommand,
-  SmsWebhookPayload
+  SmsWebhookPayload,
+  RequestCommand,
+  PayCommand,
 } from './types';
 
 /**
@@ -69,6 +71,12 @@ export class SmsParserService {
       case CommandType.APPROVE:
       case CommandType.REJECT:
         return this.parseTransactionApprovalCommand(message, phoneNumber, parts, commandText as CommandType.APPROVE | CommandType.REJECT);
+
+      case CommandType.REQUEST:
+        return this.parseRequestCommand(message, phoneNumber, parts);
+      case CommandType.PAY:
+        return this.parsePayCommand(message, phoneNumber, parts);
+
       default:
         return this.createUnknownCommand(phoneNumber, message);
     }
@@ -253,18 +261,79 @@ export class SmsParserService {
 
     const code = parts[1];
 
-    // Basic validation - ensure code is in the expected format
-    const codeRegex = /^[A-Za-z0-9]{6,10}$/;
-    if (!codeRegex.test(code)) {
-      return this.createUnknownCommand(phoneNumber, message);
-    }
-
     return {
       type: commandType,
       rawMessage: message,
       phoneNumber,
       code
     };
+  }
+
+  /**
+   * Parses a transaction approval command (APPROVE or REJECT)
+   * @param message - The original message
+   * @param phoneNumber - The sender's phone number
+   * @param parts - The message split into parts
+   * @returns A request payment command if valid, otherwise an unknown command
+   * @private
+   */
+  private parseRequestCommand(
+    message: string,
+    phoneNumber: string,
+    parts: string[],
+  ): RequestCommand | UnknownCommand {
+    if (parts.length < 3) {
+      return this.createUnknownCommand(phoneNumber, message);
+    }
+
+    const amountTokenStr = parts[1];
+    const recipient = parts[2];
+
+    // Parse amount and token - assuming format like "10USDC" or "0.1ETH"
+    const re = /^(\d+\.?\d*)([A-Za-z]+)$/;
+    const matches = amountTokenStr.match(re);
+
+    if (!matches || matches.length !== 3) {
+      return this.createUnknownCommand(phoneNumber, message);
+    }
+
+    const amount = matches[1];
+    const token = matches[2].toUpperCase();
+
+    // Basic validation
+    const amountFloat = parseFloat(amount);
+    if (isNaN(amountFloat) || amountFloat <= 0) {
+      return this.createUnknownCommand(phoneNumber, message);
+    }
+
+    return {
+      type: CommandType.REQUEST,
+      rawMessage: message,
+      phoneNumber,
+      amount,
+      token,
+      recipient
+    };
+  }
+
+  private parsePayCommand(
+    message: string,
+    phoneNumber: string,
+    parts: string[],
+  ): PayCommand | UnknownCommand {
+    if (parts.length < 2) {
+      return this.createUnknownCommand(phoneNumber, message);
+    }
+
+    const code = parts[1];
+
+    return {
+      type: CommandType.PAY,
+      rawMessage: message,
+      phoneNumber,
+      code
+    };
+
   }
 }
 

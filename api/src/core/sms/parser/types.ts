@@ -15,6 +15,8 @@ export enum CommandType {
   DENY = 'DENY',
   APPROVE = 'APPROVE',
   REJECT = 'REJECT',
+  REQUEST = "REQUEST",
+  PAY = 'PAY',
   UNKNOWN = "UNKNOWN"
 }
 
@@ -58,8 +60,29 @@ export interface TransactionApprovalCommand extends ParsedCommand {
   code: string;
 }
 
+export interface RequestCommand extends ParsedCommand {
+  type: CommandType.REQUEST;
+  amount: string;
+  /** Token symbol (e.g., ETH, USDC) */
+  token: string;
+  recipient: string;
+}
+
+export interface PayCommand extends ParsedCommand {
+  type: CommandType.PAY;
+  code: string;
+}
+
 export interface UnknownCommand extends ParsedCommand {
   type: CommandType.UNKNOWN;
 }
 
-export type Command = HelpCommand | RegisterCommand | SendCommand | NominateCommand | NominationResponseCommand | TransactionApprovalCommand | UnknownCommand;
+export type Command = HelpCommand |
+  RegisterCommand |
+  SendCommand |
+  NominateCommand |
+  NominationResponseCommand |
+  TransactionApprovalCommand |
+  RequestCommand |
+  PayCommand |
+  UnknownCommand;
