@@ -226,6 +226,15 @@ export class CommandResponseService {
     `
   }
 
+  public createSendRecipientNotification(
+    sender: string,
+    amount: string,
+  ): string {
+    return `
+      You have received ${amount}USDC from ${sender}.
+    `
+  }
+
   /**
    * Creates a message to notify the payer about payment made
    * @param recipientNumber - Phone number of the payment requester
