@@ -1,14 +1,13 @@
-/**
- * @fileoverview Service for generating response messages for commands
- */
 import {
-  CommandResponse,
+  // CommandResponse,
   HelpResponse,
   RegisterResponse,
   SendResponse,
   UnknownResponse,
   TransferStatus,
-  Response
+  Response,
+  NominateResponse,
+  ApprovalResponse
 } from './types';
 
 /**
@@ -23,11 +22,14 @@ export class CommandResponseService {
     const availableCommands = [
       'HELP - Show available commands',
       'REGISTER - Create a new wallet',
-      'SEND [amount][token] [address/ENS] - Send tokens'
+      'SEND [amount][token] [address/ENS] - Send tokens',
+      'NOMINATE [phone1] [phone2] - Nominate cosigners for transactions',
+      'ACCEPT [code] - Accept a nomination',
+      'DENY [code] - Deny a nomination'
     ];
 
     return {
-      message: 'Commands: HELP (this message), REGISTER (create wallet), SEND [amount][token] [address/ENS]',
+      message: 'Commands: HELP (this message), REGISTER (create wallet), SEND [amount][token] [address/ENS], NOMINATE [phone1] [phone2], ACCEPT/DENY [code]',
       success: true,
       availableCommands
     };
@@ -90,6 +92,10 @@ export class CommandResponseService {
       case TransferStatus.INVALID:
         message = `Invalid transfer request. Please check the recipient address and try again.`;
         break;
+
+      default:
+        message = ''
+        break;
     }
 
     return {
@@ -102,6 +108,55 @@ export class CommandResponseService {
       ensName,
       transactionHash
     };
+  }
+
+  /**
+   * Creates a nominate response
+   * @param nominees - Array of nominee phone numbers
+   * @param code - Unique nomination code
+   * @param success - Whether the nomination was successfully created
+   * @returns A formatted nominate response
+   */
+  public createNominateResponse(nominees: string[], code: string, success: boolean = true): NominateResponse {
+    const message = success
+      ? `You've nominated ${nominees.join(' and ')} as cosigners for your transactions. They will receive a message to accept or deny. Nomination code: ${code}`
+      : `Failed to nominate cosigners. Please try again.`;
+
+    return {
+      message,
+      success,
+      nominees,
+      code
+    };
+  }
+
+  /**
+   * Creates a transaction approval request message
+   * @param username - Phone number of the transaction initiator
+   * @param amount - Amount being sent
+   * @param token - Token being sent
+   * @param recipient - Recipient address
+   * @param codeIdentifier - Transaction approval code
+   * @returns Message to send to approvers
+   */
+  public createApprovalRequestMessage(
+    username: string,
+    amount: string,
+    token: string,
+    recipient: string,
+    codeIdentifier: string
+  ): string {
+    return `${username} is trying to send ${amount} ${token} to ${recipient}. Reply APPROVE ${codeIdentifier} to authorize or REJECT ${codeIdentifier} to deny.`;
+  }
+
+  /**
+   * Creates a nominee notification message
+   * @param nominatorPhone - Phone number of the nominator
+   * @param code - Unique nomination code
+   * @returns Message to send to a nominee
+   */
+  public createNomineeNotification(nominatorPhone: string, code: string): string {
+    return `${nominatorPhone} has nominated you as a cosigner for their transactions. Reply ACCEPT ${code} to confirm or DENY ${code} to decline.`;
   }
 
   /**

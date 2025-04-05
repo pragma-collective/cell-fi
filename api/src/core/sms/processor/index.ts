@@ -1,10 +1,7 @@
-/**
- * @fileoverview Command processor that ties together parsing, handling, and responding
- */
 import { SmsParserService } from '../parser';
 import { SmsSenderService } from '../sender';
 import { CommandResponseService } from '../responder';
-import { Command, CommandType, SmsWebhookPayload } from '../parser/types';
+import { Command, CommandType, SmsWebhookPayload, NominateCommand } from '../parser/types';
 import { Response, TransferStatus } from '../responder/types';
 import { createUserWallet } from '../../../util/wallet';
 import { registerENSName } from '../../../util/ensRegistration';
@@ -146,6 +143,34 @@ export class CommandProcessor {
         token,
       }
     );
+  }
+
+  /**
+   * Handles a nominate command
+   * @param command - The nominate command
+   * @returns Nominate response
+   */
+  private async handleNominateCommand(command: NominateCommand): Promise<Response> {
+    const { phoneNumber, nominee1, nominee2 } = command;
+
+    try {
+
+      // generate code
+      const code = ''
+      // Create records in database
+
+      // Send notification to nominees
+      const nomineeMessage = this.responseService.createNomineeNotification(phoneNumber, code);
+      await Promise.all([
+        this.senderService.sendMessage(nominee1, nomineeMessage),
+        this.senderService.sendMessage(nominee2, nomineeMessage)
+      ]);
+
+      return this.responseService.createNominateResponse([nominee1, nominee2], code);
+    } catch (error) {
+      console.error('Error processing nomination:', error);
+      return this.responseService.createNominateResponse([], '', false);
+    }
   }
 
   /**

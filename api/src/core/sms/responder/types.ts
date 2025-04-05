@@ -15,8 +15,11 @@ export interface RegisterResponse extends CommandResponse {
 
 export enum TransferStatus {
   INITIATED = 'INITIATED',
-  FAILED = 'FAILED',
   AWAITING_CONFIRMATION = 'AWAITING_CONFIRMATION',
+  PENDING_APPROVAL = 'PENDING_APPROVAL', // New status
+  APPROVED = 'APPROVED', // New status
+  REJECTED = 'REJECTED', // New status
+  FAILED = 'FAILED',
   INVALID = 'INVALID'
 }
 
@@ -29,6 +32,18 @@ export interface SendResponse extends CommandResponse {
   token: string;
 }
 
+// Add new response types for nominations
+export interface NominateResponse extends CommandResponse {
+  nominees: string[];
+  code: string;
+}
+
+export interface ApprovalResponse extends CommandResponse {
+  code: string;
+  approved: boolean;
+  nominatedBy?: string;
+}
+
 export interface UnknownResponse extends CommandResponse {
   originalCommand: string;
   suggestions: string[];
@@ -38,4 +53,6 @@ export type Response =
   | HelpResponse
   | RegisterResponse
   | SendResponse
+  | NominateResponse
+  | ApprovalResponse
   | UnknownResponse;
