@@ -15,12 +15,14 @@
     "drizzle-orm": "^0.41.0",
     "ethers": "^6.13.5",
     "hono": "^4.7.5",
+    "nanoid": "^5.1.5",
     "pg": "^8.14.1",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/axios": "^0.14.4",
     "@types/bun": "latest",
+    "@types/nanoid": "^3.0.0",
     "drizzle-kit": "^0.30.6",
     "tsx": "^4.19.3"
   }

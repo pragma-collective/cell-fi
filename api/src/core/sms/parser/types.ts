@@ -10,6 +10,11 @@ export enum CommandType {
   HELP = "HELP",
   REGISTER = "REGISTER",
   SEND = "SEND",
+  NOMINATE = 'NOMINATE',
+  ACCEPT = 'ACCEPT',
+  DENY = 'DENY',
+  APPROVE = 'APPROVE',
+  REJECT = 'REJECT',
   UNKNOWN = "UNKNOWN"
 }
 
@@ -37,8 +42,24 @@ export interface SendCommand extends ParsedCommand {
   recipient: string;
 }
 
+export interface NominateCommand extends ParsedCommand {
+  type: CommandType.NOMINATE;
+  nominee1: string;
+  nominee2: string;
+}
+
+export interface NominationResponseCommand extends ParsedCommand {
+  type: CommandType.ACCEPT | CommandType.DENY;
+  code: string;
+}
+
+export interface TransactionApprovalCommand extends ParsedCommand {
+  type: CommandType.APPROVE | CommandType.REJECT;
+  code: string;
+}
+
 export interface UnknownCommand extends ParsedCommand {
   type: CommandType.UNKNOWN;
 }
 
-export type Command = HelpCommand | RegisterCommand | SendCommand | UnknownCommand;
+export type Command = HelpCommand | RegisterCommand | SendCommand | NominateCommand | NominationResponseCommand | TransactionApprovalCommand | UnknownCommand;

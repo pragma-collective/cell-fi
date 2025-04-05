@@ -1,0 +1,1 @@
+ALTER TABLE "nominations" ADD COLUMN "code" varchar(60) NOT NULL;

@@ -1,6 +1,8 @@
 import { pgTable, varchar, uuid, integer, pgEnum } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { timestamps } from "./helper";
 import { user } from "./user";
+
 
 export const transactionStatus = pgEnum("transaction_status", [
   "pending",
@@ -21,3 +23,11 @@ export const transaction = pgTable("transactions", {
   amount: integer("amount").notNull(),
   ...timestamps,
 });
+
+
+export const transactionRelations = relations(transaction, ({ one }) => ({
+  owner: one(user, {
+    fields: [transaction.userId],
+    references: [user.id],
+  }),
+}));

@@ -4,6 +4,7 @@ import {
   HelpCommand,
   RegisterCommand,
   SendCommand,
+  NominateCommand,
   UnknownCommand,
   SmsWebhookPayload
 } from './types';
@@ -60,6 +61,14 @@ export class SmsParserService {
         return this.parseRegisterCommand(message, phoneNumber, parts);
       case CommandType.SEND:
         return this.parseSendCommand(message, phoneNumber, parts);
+      case CommandType.NOMINATE:
+        return this.parseNominateCommand(message, phoneNumber, parts);
+      case CommandType.ACCEPT:
+      case CommandType.DENY:
+        return this.parseNominationResponseCommand(message, phoneNumber, parts, commandText as CommandType.ACCEPT | CommandType.DENY);
+      case CommandType.APPROVE:
+      case CommandType.REJECT:
+        return this.parseTransactionApprovalCommand(message, phoneNumber, parts, commandText as CommandType.APPROVE | CommandType.REJECT);
       default:
         return this.createUnknownCommand(phoneNumber, message);
     }
@@ -140,6 +149,74 @@ export class SmsParserService {
   }
 
   /**
+   * Parses a nominate command
+   * @param message - The original message
+   * @param phoneNumber - The sender's phone number
+   * @param parts - The message split into parts
+   * @returns A nominate command if valid, otherwise an unknown command
+   * @private
+   */
+  private parseNominateCommand(message: string, phoneNumber: string, parts: string[]): NominateCommand | UnknownCommand {
+    if (parts.length !== 3) {
+      return this.createUnknownCommand(phoneNumber, message);
+    }
+
+    const nominee1 = parts[1];
+    const nominee2 = parts[2];
+
+    // // Basic validation - ensure phone numbers are in a reasonable format
+    // // This is a simple format check - adjust as needed for your phone number format
+    // const phoneRegex = /^\+?\d{10,15}$/;
+    // if (!phoneRegex.test(nominee1) || !phoneRegex.test(nominee2)) {
+    //   return this.createUnknownCommand(phoneNumber, message);
+    // }
+
+    return {
+      type: CommandType.NOMINATE,
+      rawMessage: message,
+      phoneNumber,
+      nominee1,
+      nominee2
+    };
+  }
+
+  /**
+   * Parses a nomination response command (ACCEPT or DENY)
+   * @param message - The original message
+   * @param phoneNumber - The sender's phone number
+   * @param parts - The message split into parts
+   * @param commandType - Either ACCEPT or DENY
+   * @returns A nomination response command if valid, otherwise an unknown command
+   * @private
+   */
+  private parseNominationResponseCommand(
+    message: string,
+    phoneNumber: string,
+    parts: string[],
+    commandType: CommandType.ACCEPT | CommandType.DENY
+  ) {
+  // ): NominationResponseCommand | UnknownCommand {
+    if (parts.length !== 2) {
+      return this.createUnknownCommand(phoneNumber, message);
+    }
+
+    const code = parts[1];
+
+    // Basic validation - ensure code is in the expected format
+    // const codeRegex = /^[A-Za-z0-9]{6,10}$/;
+    // if (!codeRegex.test(code)) {
+    //   return this.createUnknownCommand(phoneNumber, message);
+    // }
+
+    return {
+      type: commandType,
+      rawMessage: message,
+      phoneNumber,
+      code
+    };
+  }
+
+  /**
    * Creates an unknown command
    * @param phoneNumber - The sender's phone number
    * @param message - The original message
@@ -151,6 +228,42 @@ export class SmsParserService {
       type: CommandType.UNKNOWN,
       rawMessage: message,
       phoneNumber
+    };
+  }
+
+  /**
+   * Parses a transaction approval command (APPROVE or REJECT)
+   * @param message - The original message
+   * @param phoneNumber - The sender's phone number
+   * @param parts - The message split into parts
+   * @param commandType - Either APPROVE or REJECT
+   * @returns A transaction approval command if valid, otherwise an unknown command
+   * @private
+   */
+  private parseTransactionApprovalCommand(
+    message: string,
+    phoneNumber: string,
+    parts: string[],
+    commandType: CommandType.APPROVE | CommandType.REJECT
+  ) {
+  // ): TransactionApprovalCommand | UnknownCommand {
+    if (parts.length !== 2) {
+      return this.createUnknownCommand(phoneNumber, message);
+    }
+
+    const code = parts[1];
+
+    // Basic validation - ensure code is in the expected format
+    const codeRegex = /^[A-Za-z0-9]{6,10}$/;
+    if (!codeRegex.test(code)) {
+      return this.createUnknownCommand(phoneNumber, message);
+    }
+
+    return {
+      type: commandType,
+      rawMessage: message,
+      phoneNumber,
+      code
     };
   }
 }

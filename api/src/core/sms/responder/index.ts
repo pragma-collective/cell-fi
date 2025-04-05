@@ -1,14 +1,13 @@
-/**
- * @fileoverview Service for generating response messages for commands
- */
 import {
-  CommandResponse,
+  // CommandResponse,
   HelpResponse,
   RegisterResponse,
   SendResponse,
   UnknownResponse,
   TransferStatus,
-  Response
+  Response,
+  NominateResponse,
+  ApprovalResponse
 } from './types';
 
 /**
@@ -23,11 +22,14 @@ export class CommandResponseService {
     const availableCommands = [
       'HELP - Show available commands',
       'REGISTER - Create a new wallet',
-      'SEND [amount][token] [address/ENS] - Send tokens'
+      'SEND [amount][token] [address/ENS] - Send tokens',
+      'NOMINATE [phone1] [phone2] - Nominate cosigners for transactions',
+      'ACCEPT [code] - Accept a nomination',
+      'DENY [code] - Deny a nomination'
     ];
 
     return {
-      message: 'Commands: HELP (this message), REGISTER (create wallet), SEND [amount][token] [address/ENS]',
+      message: 'Commands: HELP (this message), REGISTER (create wallet), SEND [amount][token] [address/ENS], NOMINATE [phone1] [phone2], ACCEPT/DENY [code]',
       success: true,
       availableCommands
     };
@@ -67,9 +69,10 @@ export class CommandResponseService {
       token: string;
       ensName?: string;
       transactionHash?: string;
+      pendingApproval?: boolean;
     }
   ): SendResponse {
-    const { recipient, amount, token, ensName, transactionHash } = params;
+    const { recipient, amount, token, ensName, transactionHash, pendingApproval } = params;
     let message: string;
 
     switch (status) {
@@ -80,7 +83,22 @@ export class CommandResponseService {
         break;
 
       case TransferStatus.AWAITING_CONFIRMATION:
-        message = `Please confirm you want to send ${amount} ${token} to ${ensName ? `${recipient} (${ensName})` : recipient}. Reply YES to confirm.`;
+        message = `Successfully initiated transfer of ${amount} ${token} to ${ensName || recipient}.`;
+        // message = `Please confirm you want to send ${amount} ${token} to ${ensName ? `${recipient} (${ensName})` : recipient}. Reply YES to confirm.`;
+        break;
+
+      case TransferStatus.PENDING_APPROVAL:
+        message = `Your transaction of ${amount} ${token} to ${ensName || recipient} is pending approval from your nominated cosigners.`;
+        break;
+
+      case TransferStatus.APPROVED:
+        // message = `Your transaction of ${amount} ${token} to ${ensName || recipient} has been approved and executed. Transaction hash: ${transactionHash}`;
+        message = `Your transaction of ${amount} ${token} has been approved and executed.`;
+        break;
+
+      case TransferStatus.REJECTED:
+        // message = `Your transaction of ${amount} ${token} to ${ensName || recipient} was rejected by a cosigner.`;
+        message = `Your recent transaction of ${amount} ${token} was rejected by a cosigner.`;
         break;
 
       case TransferStatus.FAILED:
@@ -94,14 +112,69 @@ export class CommandResponseService {
 
     return {
       message,
-      success: status === TransferStatus.INITIATED || status === TransferStatus.AWAITING_CONFIRMATION,
+      success: [
+        TransferStatus.INITIATED,
+        TransferStatus.AWAITING_CONFIRMATION,
+        TransferStatus.PENDING_APPROVAL,
+        TransferStatus.APPROVED
+      ].includes(status),
       status,
       recipient,
       amount,
       token,
       ensName,
-      transactionHash
+      transactionHash,
+      pendingApproval
     };
+  }
+
+  /**
+   * Creates a nominate response
+   * @param nominees - Array of nominee phone numbers
+   * @param code - Unique nomination code
+   * @param success - Whether the nomination was successfully created
+   * @returns A formatted nominate response
+   */
+  public createNominateResponse(nominees: string[], code: string, success: boolean = true): NominateResponse {
+    const message = success
+      ? `You've nominated ${nominees.join(' and ')} as cosigners for your transactions. They will receive a message to accept or deny. Nomination code: ${code}`
+      : `Failed to nominate cosigners. Please try again.`;
+
+    return {
+      message,
+      success,
+      nominees,
+      code
+    };
+  }
+
+  /**
+   * Creates a transaction approval request message
+   * @param username - Phone number of the transaction initiator
+   * @param amount - Amount being sent
+   * @param token - Token being sent
+   * @param recipient - Recipient address
+   * @param codeIdentifier - Transaction approval code
+   * @returns Message to send to approvers
+   */
+  public createApprovalRequestMessage(
+    username: string,
+    amount: string,
+    token: string,
+    recipient: string,
+    codeIdentifier: string
+  ): string {
+    return `${username} is trying to send ${amount} ${token} to ${recipient}. Reply APPROVE ${codeIdentifier} to authorize or REJECT ${codeIdentifier} to deny.`;
+  }
+
+  /**
+   * Creates a nominee notification message
+   * @param nominatorPhone - Phone number of the nominator
+   * @param code - Unique nomination code
+   * @returns Message to send to a nominee
+   */
+  public createNomineeNotification(nominatorPhone: string, code: string): string {
+    return `${nominatorPhone} has nominated you as a cosigner for their transactions. Reply ACCEPT ${code} to confirm or DENY ${code} to decline.`;
   }
 
   /**
@@ -112,6 +185,20 @@ export class CommandResponseService {
   public createUnknownResponse(originalCommand: string): UnknownResponse {
     return {
       message: 'Command not recognized. Text HELP to see available commands.',
+      success: false,
+      originalCommand,
+      suggestions: ['HELP', 'REGISTER', 'SEND [amount][token] [address/ENS]']
+    };
+  }
+
+  /**
+   * Creates a response for an unknown command
+   * @param originalCommand - The unrecognized command
+   * @returns A formatted unknown command response
+   */
+  public createGenericResponse(message: string, originalCommand: string): UnknownResponse {
+    return {
+      message,
       success: false,
       originalCommand,
       suggestions: ['HELP', 'REGISTER', 'SEND [amount][token] [address/ENS]']

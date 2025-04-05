@@ -1,4 +1,7 @@
-import { pgTable, varchar, uuid } from "drizzle-orm/pg-core";
+import { pgTable, varchar, uuid, boolean } from "drizzle-orm/pg-core";
+import { relations } from 'drizzle-orm';
+
+import { nomination } from './nomination';
 import { timestamps } from "./helper";
 
 export const user = pgTable("users", {
@@ -10,5 +13,10 @@ export const user = pgTable("users", {
   phoneNumber: varchar("phone_number", { length: 255 }),
   walletAddress: varchar("wallet_address", { length: 255 }).notNull(),
   circleWalletId: uuid("circle_wallet_id").notNull(),
+  requiresApproval: boolean("requires_approval").notNull().default(false),
   ...timestamps,
 });
+
+export const userRelations = relations(user, ({ many }) => ({
+    approvers: many(nomination),
+}));
