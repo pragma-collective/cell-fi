@@ -1,11 +1,13 @@
 import { Hono } from "hono";
 import { webhook } from "./api/webhook";
 import userRouter from "./routes/user";
+import authRouter from "./routes/auth";
 
 const app = new Hono();
 
-// Mount the user router
+// Mount the routers
 app.route("/user", userRouter);
+app.route("/auth", authRouter);
 
 app.get("/", async (c) => {
   return c.json({

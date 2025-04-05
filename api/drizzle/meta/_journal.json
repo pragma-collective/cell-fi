@@ -36,6 +36,13 @@
       "when": 1743849485933,
       "tag": "0005_slow_komodo",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1743861524281,
+      "tag": "0006_zippy_gravity",
+      "breakpoints": true
     }
   ]
 }
