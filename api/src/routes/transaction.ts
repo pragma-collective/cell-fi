@@ -13,17 +13,19 @@ transactionRouter.post(
   "/",
   validator("json", (value, c) => {
     const {
-      userId,
-      destinationAddress,
+      username,
+      ensName,
+      destinationEnsName,
       amount,
       type,
     }: CreateTransactionParams = value;
-    if (!userId || !destinationAddress || !amount || !type) {
+    if (!username || !ensName || !destinationEnsName || !amount || !type) {
       return c.json({ message: "Missing required fields" }, 400);
     }
     return {
-      userId,
-      destinationAddress,
+      username,
+      ensName,
+      destinationEnsName,
       type,
       amount,
     };
