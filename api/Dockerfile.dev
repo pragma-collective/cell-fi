@@ -6,6 +6,7 @@ COPY package.json bun.lock ./
 RUN bun install
 
 COPY . .
+COPY .env .env
 
 EXPOSE 3000
-CMD ["bun", "run", "dev"]
+CMD bun run db:migrate && bun run dev
