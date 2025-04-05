@@ -2,23 +2,19 @@ import { Hono } from "hono";
 import { jwt } from "hono/jwt";
 import { webhook } from "./api/webhook";
 import userRouter from "./routes/user";
-<<<<<<< HEAD
 import authRouter from "./routes/auth";
 import meRouter from "./routes/me";
 import { JWT_SECRET } from "./util/constants";
-||||||| parent of 2f4da4e (feat: expose transactions endpoint)
-=======
 import { transactionRouter } from "./routes/transaction";
->>>>>>> 2f4da4e (feat: expose transactions endpoint)
 
 const app = new Hono();
 
 app.use(
-  '/me/*',
+  "/me/*",
   jwt({
     secret: JWT_SECRET,
   })
-)
+);
 
 // Mount the routers
 app.route("/user", userRouter);
