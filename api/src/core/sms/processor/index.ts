@@ -264,7 +264,17 @@ export class CommandProcessor {
           amount: amount,
           type: 'send',
         });
-  
+
+        const message = this.responseService.createSendRecipientNotification(
+          currentUser.ensName,
+          amount.toString(),
+        );
+
+        await this.senderService.sendMessage(
+          recipientUser.phoneNumber!,
+          message,
+        );
+
         return this.responseService.createSendResponse(
           TransferStatus.AWAITING_CONFIRMATION,
           {
