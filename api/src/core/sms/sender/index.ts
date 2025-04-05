@@ -48,12 +48,11 @@ export class SmsSenderService {
         rawResponse: response.data
       };
     } catch (error) {
-      console.error(error);
       // Handle error
       // todo(jhudiel) - queue for potential retry
       const axiosError = error as AxiosError;
       const errorMessage = axiosError?.response ? axiosError.response.data : axiosError.message || 'Unknown error';
-
+      console.error("Unable to send message: ", errorMessage);
       return {
         success: false,
         error: errorMessage,
