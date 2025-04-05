@@ -57,7 +57,7 @@ export class SmsParserService {
       case CommandType.HELP:
         return this.parseHelpCommand(message, phoneNumber);
       case CommandType.REGISTER:
-        return this.parseRegisterCommand(message, phoneNumber);
+        return this.parseRegisterCommand(message, phoneNumber, parts);
       case CommandType.SEND:
         return this.parseSendCommand(message, phoneNumber, parts);
       default:
@@ -87,11 +87,12 @@ export class SmsParserService {
    * @returns A register command
    * @private
    */
-  private parseRegisterCommand(message: string, phoneNumber: string): RegisterCommand {
+  private parseRegisterCommand(message: string, phoneNumber: string, parts: string[]): RegisterCommand {
     return {
       type: CommandType.REGISTER,
       rawMessage: message,
-      phoneNumber
+      phoneNumber,
+      username: parts[1] || 'Unknown username',
     };
   }
 
