@@ -26,6 +26,7 @@ export interface HelpCommand extends ParsedCommand {
 
 export interface RegisterCommand extends ParsedCommand {
   type: CommandType.REGISTER;
+  username: string;
 }
 
 export interface SendCommand extends ParsedCommand {

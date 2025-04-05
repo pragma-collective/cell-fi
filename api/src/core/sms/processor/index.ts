@@ -66,7 +66,7 @@ export class CommandProcessor {
         return this.handleHelpCommand();
 
       case CommandType.REGISTER:
-        return this.handleRegisterCommand(command.phoneNumber);
+        return this.handleRegisterCommand(command.phoneNumber, command.username);
 
       case CommandType.SEND:
         return this.handleSendCommand(command);
@@ -90,7 +90,7 @@ export class CommandProcessor {
    * @param phoneNumber - The user's phone number
    * @returns Register response
    */
-  private async handleRegisterCommand(phoneNumber: string): Promise<Response> {
+  private async handleRegisterCommand(phoneNumber: string, username: string): Promise<Response> {
     // todo (joe/albert):
     //  - create wallet
     //  - create identity

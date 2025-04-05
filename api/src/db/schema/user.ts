@@ -9,5 +9,6 @@ export const user = pgTable("users", {
   lastName: varchar("last_name", { length: 255 }),
   phoneNumber: varchar("phone_number", { length: 255 }),
   walletAddress: varchar("wallet_address", { length: 255 }).notNull(),
+  circleWalletId: uuid("circle_wallet_id").notNull(),
   ...timestamps,
 });
