@@ -1,4 +1,5 @@
 import { and, eq, inArray } from "drizzle-orm";
+import { eq, inArray, and, or } from "drizzle-orm";
 import { nanoid } from 'nanoid';
 import { db } from "../../../db"
 import { user } from "../../../db/schema/user"
@@ -78,6 +79,8 @@ export class CommandProcessor {
    * @returns Promise resolving to a response object
    */
   private async handleCommand(command: Command): Promise<Response> {
+    console.log('command: ', command);
+    
     switch (command.type) {
       case CommandType.HELP:
         return this.handleHelpCommand();
@@ -187,11 +190,15 @@ export class CommandProcessor {
     }
 
     const recipientUser = await db.query.user.findFirst({
-      where: eq(user.username, recipient),
+      where: or(
+        eq(user.ensName, recipient),
+        eq(user.username, recipient),
+      )
     });
 
     if (!recipientUser) {
-      return this.responseService.createUnknownResponse("");
+      console.error('Unable to find recipient via filter: ', recipient);
+      return this.responseService.createGenericResponse("Unable to send payment. Please try again later.", '');
     }
 
     if (currentUser.requiresApproval) {
@@ -261,6 +268,7 @@ export class CommandProcessor {
           }
         );
       } catch(error) {
+        console.error('Unable to create transaction: ', error);
         return this.responseService.createSendResponse(
           TransferStatus.FAILED,
           {
