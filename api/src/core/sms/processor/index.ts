@@ -6,6 +6,7 @@ import { SmsSenderService } from '../sender';
 import { CommandResponseService } from '../responder';
 import { Command, CommandType, SmsWebhookPayload } from '../parser/types';
 import { Response, TransferStatus } from '../responder/types';
+import { createUserWallet } from '../../../util/wallet';
 
 /**
  * Dependencies required by the command processor
@@ -91,10 +92,24 @@ export class CommandProcessor {
    * @returns Register response
    */
   private async handleRegisterCommand(phoneNumber: string, username: string): Promise<Response> {
-    // todo (joe/albert):
-    //  - create wallet
-    //  - create identity
-    return this.responseService.createRegisterResponse();
+    try {
+      const user = await createUserWallet({
+        phoneNumber,
+        username,
+      });  
+
+      return this.responseService.createRegisterResponse(
+        `Your new wallet has been created: ${user.ensName}`,
+        user.walletAddress,
+      );
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      return this.responseService.createRegisterResponse(
+        errorMessage,
+        undefined,
+        false,
+      );
+    }
   }
 
   /**

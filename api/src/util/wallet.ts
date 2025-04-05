@@ -1,14 +1,19 @@
 import { db } from "../db";
 import { user } from "../db/schema/user";
 import initiateDeveloperControlledWalletsClient from "./circleClient";
-import { BLOCKCHAIN_ID, CIRCLE_ACCOUNT_TYPE } from "./constants";
+import { BLOCKCHAIN_ID, CIRCLE_ACCOUNT_TYPE, ENS_DOMAIN } from "./constants";
 import { sql } from "drizzle-orm";
 import { CreateUserWalletParams } from "../types/wallet";
-const circleClient = initiateDeveloperControlledWalletsClient();
+
+// Export for testing
+export const getCircleClient = () => initiateDeveloperControlledWalletsClient();
+
+export const getENSName = (username: string) => {
+  return `${username}.${ENS_DOMAIN}`;
+};
 
 export const createUserWallet = async ({
   username,
-  ensName,
   firstName,
   lastName,
   phoneNumber,
@@ -16,6 +21,8 @@ export const createUserWallet = async ({
   // Start a database transaction
   return await db.transaction(async (tx) => {
     try {
+      const ensName = getENSName(username);
+      
       // Check if user already exists
       const existingUser = await tx
         .select()
@@ -27,13 +34,15 @@ export const createUserWallet = async ({
 
       if (existingUser.length > 0) {
         throw new Error(
-          "User with this username or phone number already exists"
+          `You already have a wallet: ${existingUser[0].ensName}`
         );
       }
 
+      const circleClient = getCircleClient();
+
       // Create Circle wallet set
       const circleWalletSetResponse = await circleClient.createWalletSet({
-        name: ensName ?? username,
+        name: ensName,
       });
 
       if (!circleWalletSetResponse.data?.walletSet?.id) {
@@ -67,15 +76,10 @@ export const createUserWallet = async ({
           walletAddress: circleWallet.data.wallets[0].address,
           circleWalletId: circleWallet.data.wallets[0].id,
         })
-        .returning({ id: user.id });
+        .returning({ id: user.id, walletAddress: user.walletAddress, ensName: user.ensName });
 
       return newUser;
     } catch (error) {
-      // If anything fails, the transaction will be rolled back automatically
-      // We should also handle cleanup of any created Circle resources here
-      if (error instanceof Error) {
-        throw new Error(`User creation failed: ${error.message}`);
-      }
       throw error;
     }
   });

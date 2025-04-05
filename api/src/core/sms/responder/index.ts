@@ -39,16 +39,11 @@ export class CommandResponseService {
    * @param isNewWallet - Whether this is a new wallet or existing one
    * @returns A formatted register response
    */
-  public createRegisterResponse(walletAddress?: string, isNewWallet: boolean = true): RegisterResponse {
-    let message: string;
-
-    if (walletAddress && !isNewWallet) {
-      message = `You already have a wallet: ${walletAddress}`;
-    } else if (walletAddress) {
-      message = `Your new wallet has been created: ${walletAddress}`;
-    } else {
-      message = "Starting wallet creation process. We'll send you confirmation once your wallet is ready.";
-    }
+  public createRegisterResponse(
+    message: string,
+    walletAddress?: string, 
+    isNewWallet: boolean = true
+  ): RegisterResponse {
 
     return {
       message,

@@ -8,7 +8,7 @@ userRouter.post(
   "/",
   validator("json", (value, c) => {
     const { username, firstName, lastName, phoneNumber } = value;
-    if (!username || !firstName || !lastName || !phoneNumber) {
+    if (!username ||  !phoneNumber) {
       return c.json({ message: "Missing required fields" }, 400);
     }
     return {
@@ -22,7 +22,6 @@ userRouter.post(
     const { username, firstName, lastName, phoneNumber } = await c.req.json();
     const user = await createUserWallet({
       username,
-      ensName: `${username}.eth`,
       firstName,
       lastName,
       phoneNumber,
