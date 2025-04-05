@@ -32,4 +32,8 @@ webhook.post('/', async (c) => {
 
   // todo(jhudiel) - error handling
   await processor.processWebhook(body);
+
+  return c.json({
+    status: 'ok',
+  });
 });
