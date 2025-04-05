@@ -89,19 +89,19 @@ export const createTransaction = async ({
 
       // parse state to transaction status
       const state = transactionResponse.data.state;
-      let status: TransactionStatus;
-      switch (state) {
-        case "COMPLETE":
-          status = "success";
-          break;
-        case "FAILED":
-        case "CANCELLED":
-        case "DENIED":
-          status = "failed";
-          break;
-        default:
-          status = "pending";
-      }
+      let status: TransactionStatus = 'success';
+      // switch (state) {
+      //   case "COMPLETE":
+      //     status = "success";
+      //     break;
+      //   case "FAILED":
+      //   case "CANCELLED":
+      //   case "DENIED":
+      //     status = "failed";
+      //     break;
+      //   default:
+      //     status = "pending";
+      // }
 
       const [newTransaction] = await tx
         .insert(transaction)
