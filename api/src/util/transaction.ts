@@ -1,6 +1,5 @@
 import { db } from "../db";
-import { eq, sql } from "drizzle-orm";
-import { user } from "../db/schema/user";
+import { sql } from "drizzle-orm";
 import {
   transaction,
   transactionStatus,
@@ -33,28 +32,20 @@ export const createTransaction = async ({
         throw new Error("Username or ENS name is required");
       }
 
-      const senderWallet = await getUserWallet(username, ensName);
+      const senderWallet = await getUserWallet(ensName);
 
-      if (!senderWallet?.address) {
-        throw new Error("Sender wallet address is missing");
+      if (!senderWallet) {
+        throw new Error("Sender wallet not found");
       }
 
-      const destinationWallet = await getUserWallet("", destinationEnsName);
-      if (!destinationWallet?.address) {
-        throw new Error("Destination wallet address is missing");
+      const destinationWallet = await getUserWallet(destinationEnsName);
+      if (!destinationWallet) {
+        throw new Error("Destination wallet not found");
       }
       const destinationAddress = destinationWallet.address;
 
-      const sender = await tx.query.user.findFirst({
-        where: eq(user.walletAddress, senderWallet.address.toLowerCase()),
-      });
-
-      if (!sender) {
-        throw new Error("User not found");
-      }
-
       const walletTokenResponse = await circleClient.getWalletTokenBalance({
-        id: senderWallet?.id ?? "",
+        id: senderWallet.id,
       });
 
       if (!walletTokenResponse.data?.tokenBalances?.length) {
@@ -70,9 +61,13 @@ export const createTransaction = async ({
         }
       );
 
+      if (!tokenBalance) {
+        throw new Error("Token balance not found");
+      }
+
       const transactionResponse = await circleClient.createTransaction({
-        walletId: senderWallet?.id ?? "",
-        tokenId: tokenBalance?.token.id ?? "",
+        walletId: senderWallet.id,
+        tokenId: tokenBalance.token.id,
         destinationAddress,
         amount: [amount.toString()],
         fee: {
@@ -89,7 +84,7 @@ export const createTransaction = async ({
 
       // parse state to transaction status
       const state = transactionResponse.data.state;
-      let status: TransactionStatus = 'success';
+      let status: TransactionStatus = "success";
       // switch (state) {
       //   case "COMPLETE":
       //     status = "success";
@@ -111,7 +106,7 @@ export const createTransaction = async ({
           destinationAddress,
           txHash: transactionResponse.data.id,
           status,
-          amount: Math.round(amount),
+          amount: Math.round(Number(amount)),
         })
         .returning({
           id: transaction.id,
