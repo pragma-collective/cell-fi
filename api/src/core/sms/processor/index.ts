@@ -99,7 +99,7 @@ export class CommandProcessor {
         return this.handleHelpCommand();
 
       case CommandType.REGISTER:
-        return this.handleRegisterCommand(command.phoneNumber, '');
+        return this.handleRegisterCommand(command.phoneNumber, command.username);
 
       case CommandType.SEND:
         return this.handleSendCommand(command);
@@ -154,7 +154,7 @@ export class CommandProcessor {
       }
 
       return this.responseService.createRegisterResponse(
-        `Your new wallet has been created: ${user.ensName}`,
+        `Your new wallet has been created: ${user.username}. You can now send tokens or use NOMINATE to add trusted contacts as an extra security layer.`,
         user.walletAddress,
       );
       
@@ -753,11 +753,12 @@ export class CommandProcessor {
 
     if (!currentUser || nominees.length < 2) {
       // todo(jhudiel) - error
-      return this.responseService.createUnknownResponse("");
+      return this.responseService.createGenericResponse("Unable to nominate cosigners. Please try again later", "");
     }
 
     try {
-      const code = nanoid(6)
+      const code = nanoid(6);
+      const nomineeMessage = this.responseService.createNomineeNotification(currentUser.username, code);
       await Promise.all(nominees.map((n) => {
         return db.insert(nomination).values({
           userId: currentUser.id,
@@ -767,12 +768,11 @@ export class CommandProcessor {
         });
       }));
 
-      // Send notification to nominees
-      const nomineeMessage = this.responseService.createNomineeNotification(currentUser.username, code);
-      await Promise.all([
-        this.senderService.sendMessage(nominee1, nomineeMessage),
-        this.senderService.sendMessage(nominee2, nomineeMessage)
-      ]);
+      await Promise.all(nominees.map((n) => {
+        if (n?.phoneNumber) {
+          return this.senderService.sendMessage(n.phoneNumber!, nomineeMessage);
+        }
+      }));
 
       return this.responseService.createNominateResponse([nominee1, nominee2], code);
     } catch (error) {

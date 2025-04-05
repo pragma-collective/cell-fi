@@ -76,7 +76,7 @@ export const createUserWallet = async ({
           walletAddress: circleWallet.data.wallets[0].address,
           circleWalletId: circleWallet.data.wallets[0].id,
         })
-        .returning({ id: user.id, walletAddress: user.walletAddress, ensName: user.ensName });
+        .returning({ id: user.id, walletAddress: user.walletAddress, ensName: user.ensName, username: user.username });
 
       return newUser;
     } catch (error) {

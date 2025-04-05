@@ -192,6 +192,20 @@ export class CommandResponseService {
   }
 
   /**
+   * Creates a response for an unknown command
+   * @param originalCommand - The unrecognized command
+   * @returns A formatted unknown command response
+   */
+  public createGenericResponse(message: string, originalCommand: string): UnknownResponse {
+    return {
+      message,
+      success: false,
+      originalCommand,
+      suggestions: ['HELP', 'REGISTER', 'SEND [amount][token] [address/ENS]']
+    };
+  }
+
+  /**
    * Extracts just the message text from any response type
    * @param response - The command response object
    * @returns The message text to send to the user
