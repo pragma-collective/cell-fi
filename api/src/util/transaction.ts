@@ -57,7 +57,7 @@ export const createTransaction = async ({
         walletId,
         tokenId: tokenBalance?.token.id ?? "",
         destinationAddress,
-        amount: [amount],
+        amount: [amount.toString()],
         fee: {
           type: "level",
           config: {
@@ -94,7 +94,7 @@ export const createTransaction = async ({
           destinationAddress,
           txHash: transactionResponse.data.id,
           status,
-          amount: parseFloat(amount.toString()),
+          amount: Math.round(amount),
         })
         .returning({
           id: transaction.id,
