@@ -44,6 +44,16 @@ export const createTransaction = async ({
       }
       const destinationAddress = destinationWallet.address;
 
+      const sender = await tx.query.user.findFirst({
+        where: (user, { eq }) =>
+          eq(user.circleWalletId, senderWallet.id) &&
+          eq(user.walletAddress, senderWallet.address),
+      });
+
+      if (!sender) {
+        throw new Error("Sender wallet not found");
+      }
+
       const transactionResponse = await circleClient.createTransaction({
         walletId: senderWallet.id,
         tokenId: "4b8daacc-5f47-5909-a3ba-30d171ebad98", // USDC
@@ -80,7 +90,7 @@ export const createTransaction = async ({
       const [newTransaction] = await tx
         .insert(transaction)
         .values({
-          userId: senderWallet.id,
+          userId: sender.id,
           type,
           destinationAddress,
           txHash: transactionResponse.data.id,
