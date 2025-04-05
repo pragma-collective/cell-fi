@@ -1,1 +1,1 @@
-ALTER TABLE "users" ADD COLUMN "circle_wallet_id" uuid NOT NULL;
+ALTER TABLE "users" ADD COLUMN "circle_wallet_id" uuid;
